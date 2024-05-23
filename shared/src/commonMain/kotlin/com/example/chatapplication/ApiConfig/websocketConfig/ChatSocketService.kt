@@ -1,6 +1,6 @@
 package com.example.chatapplication.ApiConfig.websocketConfig
 
-import com.example.chatapplication.ApiConfig.getHttpClientForWebSocket
+import com.example.chatapplication.getHttpClientForWebSocket
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.url
 import io.ktor.http.Url
