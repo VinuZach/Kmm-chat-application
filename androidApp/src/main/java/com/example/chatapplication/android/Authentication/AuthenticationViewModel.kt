@@ -28,6 +28,7 @@ class AuthenticationViewModel(private val apiCallManager: HttpClient = getHttpCl
     {
         var result: UserAuthenticationResponse? = null
         viewModelScope.launch {
+            result=UserAuthenticationResponse(success = false, message ="Server response not obtained" )
             val httpResponse: HttpResponse? = try
             {
                 apiCallManager.request {
@@ -40,7 +41,8 @@ class AuthenticationViewModel(private val apiCallManager: HttpClient = getHttpCl
                 e.printStack()
                 null
             }
-            if (httpResponse?.status == HttpStatusCode.OK) result = httpResponse.body<UserAuthenticationResponse>()
+
+            if (httpResponse?.status == HttpStatusCode.OK||httpResponse?.status==HttpStatusCode.Unauthorized) result = httpResponse.body<UserAuthenticationResponse>()
 
         }.invokeOnCompletion {
 
