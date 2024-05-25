@@ -9,6 +9,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -19,8 +20,9 @@ class AndroidPlatform : Platform
 
 interface ApiResponseObtained
 {
-    fun onResponseObtained(isSuccess:Boolean,response:Any?)
+    fun onResponseObtained(isSuccess: Boolean, response: Any?)
 }
+
 actual fun getPlatform(): Platform = AndroidPlatform()
 
 actual fun getHttpClientForWebSocket(): HttpClient = HttpClient(CIO) {
@@ -30,7 +32,7 @@ actual fun getHttpClientForWebSocket(): HttpClient = HttpClient(CIO) {
     }
 }
 
-actual fun getHttpClientForApi():HttpClient = HttpClient(CIO) {
+actual fun getHttpClientForApi(): HttpClient = HttpClient(CIO) {
 
     install(HttpTimeout) {
         socketTimeoutMillis = 60_000
@@ -41,17 +43,20 @@ actual fun getHttpClientForApi():HttpClient = HttpClient(CIO) {
         level = LogLevel.ALL
         logger = object : Logger
         {
-            override fun log(message: String) {
+            override fun log(message: String)
+            {
                 println("message :${message}")
             }
         }
     }
+
     install(ContentNegotiation) {
+
         json(Json {
             prettyPrint = true
             isLenient = true
             ignoreUnknownKeys = true
             useAlternativeNames = false
-        })
+        }, contentType = ContentType.Application.Json)
     }
 }
