@@ -1,5 +1,6 @@
 package com.example.chatapplication.android.chat
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.example.chatapplication.android.Authentication.AuthenticationActivity
 import kotlinx.coroutines.flow.collectLatest
 
 
@@ -123,7 +125,10 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel): Unit {
 
             )
 
-            IconButton(onClick = viewModel::sendMessage, modifier = Modifier.padding(end = 10.dp)) {
+            IconButton(onClick = {
+
+                context.startActivity(Intent(context, AuthenticationActivity::class.java))
+            }, modifier = Modifier.padding(end = 10.dp)) {
                 Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription ="Send")
             }
         }

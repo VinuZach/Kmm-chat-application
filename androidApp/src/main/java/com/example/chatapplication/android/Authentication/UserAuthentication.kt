@@ -1,6 +1,7 @@
 package com.example.chatapplication.android.Authentication
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.chatapplication.ApiConfig.UserAuthenticationResponse
 import com.example.chatapplication.ApiResponseObtained
+import com.example.chatapplication.android.MainActivity
 import kotlin.coroutines.coroutineContext
 import kotlin.math.sin
 
@@ -57,10 +59,10 @@ fun UserAuthenticationFullPage(authenticateViewModel: AuthenticationViewModel = 
     ConstraintLayout(modifier = Modifier.fillMaxSize().imePadding()) {
         val (userDetailsFieldsRef, buttonRef, newAccountRef) = createRefs()
         val userNameState = remember {
-            mutableStateOf("")
+            mutableStateOf("aaa@aaa.com")
         }
         val passWordState = remember {
-            mutableStateOf("")
+            mutableStateOf("aaa")
         }
         val emailState = remember {
             mutableStateOf("")
@@ -179,7 +181,7 @@ fun validateUser(context: Context, authenticateViewModel: AuthenticationViewMode
             Log.d("asdasdwe", "verifyUserDetails: asdasd $isSuccess   ... $response")
             if (isSuccess)
             {
-                onNavigate?.onTaskPerformed("logincomplete")
+               onNavigate?.onTaskPerformed("complete")
             }
             else
             {

@@ -3,12 +3,15 @@ package com.example.chatapplication.android.Authentication
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
@@ -40,21 +43,22 @@ class AuthenticationActivity : ComponentActivity()
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = "user_authentication") {
+
                         composable(route = "user_authentication") {
                             UserAuthenticationFullPage(onNavigate = object : onNavigate
                             {
                                 override fun onTaskPerformed(navigate: String)
                                 {
+                                    if (navigate == "complete")
+                                    {
+                                        finish()
+                                        startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
+                                    }
+                                    else
                                     navController.navigate(navigate)
                                 }
 
                             })
-                        }
-                        composable("logincomplete") {
-                            startActivity(Intent(LocalContext.current, MainActivity::class.java))
-                        }
-                        composable("new_account") {
-
                         }
                     }
                 }
