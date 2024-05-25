@@ -12,6 +12,7 @@
         <activity-alias
             android:name="startactivity"
             android:exported="true"
+            android:windowSoftInputMode="adjustResize"
             android:targetActivity=".Authentication.AuthenticationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,6 +23,7 @@
         <activity
             android:name=".Authentication.AuthenticationActivity"
             android:exported="true"
+
             android:label="@string/title_activity_authentication"
             android:theme="@style/AppTheme" />
         <activity

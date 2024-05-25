@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,19 +53,20 @@ fun UserAuthenticationFullPage(authenticateViewModel: AuthenticationViewModel = 
 {
 
     val context = LocalContext.current
-    ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+
+    ConstraintLayout(modifier = Modifier.fillMaxSize().imePadding()) {
         val (userDetailsFieldsRef, buttonRef, newAccountRef) = createRefs()
         val userNameState = remember {
-            mutableStateOf("vxcv@jj.com")
+            mutableStateOf("")
         }
         val passWordState = remember {
-            mutableStateOf("jjj")
+            mutableStateOf("")
         }
         val emailState = remember {
-            mutableStateOf("jjj@jj.com")
+            mutableStateOf("")
         }
         val isLoginPageState = remember {
-            mutableStateOf(false)
+            mutableStateOf(true)
         }
 
         Column(modifier = Modifier.constrainAs(userDetailsFieldsRef) {
