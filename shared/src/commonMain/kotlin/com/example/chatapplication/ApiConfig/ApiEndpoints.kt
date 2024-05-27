@@ -1,6 +1,6 @@
 package com.example.chatapplication.ApiConfig
 
-const val BASE_URL = "http://192.168.1.39:8000/chatApp"
+const val BASE_URL = "http://192.168.1.35:8000/chatApp"
 
 sealed class HttpEndPoints(val url: String) {
     data object UserVerification : HttpEndPoints("$BASE_URL/authenticate_user")
