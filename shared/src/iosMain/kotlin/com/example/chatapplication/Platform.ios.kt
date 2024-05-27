@@ -27,7 +27,7 @@ actual fun getHttpClientForWebSocket(): HttpClient = HttpClient(Darwin) {
     }
 }
 
-fun getHttpClientForApi(): HttpClient = HttpClient(Darwin) {
+actual fun getHttpClientForApi(): HttpClient = HttpClient(Darwin) {
     install(ContentNegotiation)
     //Timeout plugin to set up timeout milliseconds for client
     install(HttpTimeout) {

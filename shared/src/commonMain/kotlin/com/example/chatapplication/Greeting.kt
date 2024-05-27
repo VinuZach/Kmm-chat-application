@@ -1,6 +1,7 @@
 package com.example.chatapplication
 
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
+import io.ktor.client.HttpClient
 
 
 class Greeting {
@@ -10,6 +11,8 @@ class Greeting {
         return "Hello, ${platform.name}!"
     }
 
+
+fun getHttpClientForApi1():HttpClient= getHttpClientForApi()
 
     fun provideChatSocketService(): ChatSocketService {
         return ChatSocketService()

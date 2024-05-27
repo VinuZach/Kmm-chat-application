@@ -7,7 +7,7 @@ import com.example.chatapplication.ApiConfig.NewUserRegistrationRequest
 import com.example.chatapplication.ApiConfig.NewUserRegistrationResponse
 import com.example.chatapplication.ApiConfig.UserAuthenticationResponse
 import com.example.chatapplication.ApiResponseObtained
-import com.example.chatapplication.getHttpClientForApi
+import com.example.chatapplication.Greeting
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.basicAuth
@@ -22,7 +22,7 @@ import io.ktor.http.contentType
 import io.ktor.utils.io.printStack
 import kotlinx.coroutines.launch
 
-class AuthenticationViewModel(private val apiCallManager: HttpClient = getHttpClientForApi()) : ViewModel()
+class AuthenticationViewModel(private val apiCallManager: HttpClient = Greeting().getHttpClientForApi1()) : ViewModel()
 {
     fun verifyUserDetails(userName: String, password: String, apiResponseObtained: ApiResponseObtained): Unit
     {
