@@ -6,7 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatapplication.Greeting
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
+import com.example.chatapplication.ApiConfig.websocketConfig.MessageFormat
 import com.example.chatapplication.ApiConfig.websocketConfig.Resource
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
@@ -28,10 +30,10 @@ class ChatViewModel : ViewModel() {
     val toastEvent = _toastEvent.asSharedFlow()
 
 
-    fun initSession(roomId:String): Unit {
+    fun initSession(roomId: String) {
         this.chatSocketService = Greeting().provideChatSocketService()
         viewModelScope.launch {
-            val result = chatSocketService.initSession(roomId=roomId)
+            val result = chatSocketService.initSession(roomId = roomId)
 
             when (result) {
                 is Resource.Success -> {
@@ -56,20 +58,26 @@ class ChatViewModel : ViewModel() {
 
     }
 
-    fun onMessageChange(message: String): Unit {
+    fun onMessageChange(message: String) {
         _messageText.value = message
     }
 
-    fun disconnect(): Unit {
+    fun disconnect() {
         viewModelScope.launch {
             chatSocketService.closeSession()
         }
     }
 
-    fun sendMessage(): Unit {
+    fun sendMessage() {
         viewModelScope.launch {
-            if (messageText.value.isNotBlank())
-                chatSocketService.sendMessage(messageText.value)
+
+
+                val sendMessage =
+                    MessageFormat(command = "content", user = "ccc@ccc.com", message = messageText.value, blocked_user = emptyList(),
+                        pageNumber = 1)
+                chatSocketService.sendMessage(Gson().toJson(sendMessage))
+                _messageText.value=""
+
         }
     }
 

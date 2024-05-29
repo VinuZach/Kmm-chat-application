@@ -25,12 +25,12 @@ struct ContentView: View {
                 }
                 HStack
                 {
-                    TextField("type message", text: $viewModel.sendMessage)
+                    TextField("type message", text: $viewModel.sendMessageData)
                         .keyboardType(.asciiCapable)
                     Button("send")
                     {
                         print(viewModel.sendMessage)
-                        viewModel.sendMessage(message: viewModel.sendMessage)
+                        viewModel.sendMessage()
                     }
                 }.padding(.horizontal,30)
             }
@@ -48,7 +48,7 @@ struct ContentView: View {
 extension ContentView {
     class ViewModel: ObservableObject {
         @Published var chatMessageList=[MessageDto]()
-        @Published var sendMessage = ""
+        @Published var sendMessageData = ""
         var isWebSocketConnect = false
         var webSocket = Greeting().provideChatSocketService()
         init() {
@@ -87,10 +87,10 @@ extension ContentView {
             var blocked_user:[String]
             
         }
-        func sendMessage(message:String)  {
+        func sendMessage()  {
             if isWebSocketConnect
             {
-                let messageToSend = Message(command: "content", message: message, user: "ccc@ccc.com", pageNumber: 1, blocked_user:  [String]())
+                let messageToSend = Message(command: "content", message: sendMessageData, user: "ccc@ccc.com", pageNumber: 1, blocked_user:  [String]())
                 do {
                     let jsonData = try JSONEncoder().encode(messageToSend)
                     let jsonString = String(data: jsonData, encoding: .utf8)!
@@ -99,17 +99,10 @@ extension ContentView {
                     webSocket.sendMessage(message: jsonString, completionHandler: {
                         error in
                         print(error)
-              
+                        self.sendMessageData=""
                     })
                 } catch { print(error) }
-//                let dd="{\n" +
-//                    "                   \"command\": \"content\",\n" +
-//                    "                   \"message\": \"message \",\n" +
-//                    "                   \"user\":  \"ccc@ccc.com\",\n" +
-//                    "                   \"pageNumber\":1,\n" +
-//                    "                   \"blocked_user\":[]\n" +
-//                    "               }"
-           
+
             }
         }
     }

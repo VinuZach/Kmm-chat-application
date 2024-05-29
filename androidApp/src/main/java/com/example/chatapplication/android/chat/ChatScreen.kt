@@ -1,6 +1,5 @@
 package com.example.chatapplication.android.chat
 
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,19 +29,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.layout.HorizontalAlignmentLine
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.example.chatapplication.android.Authentication.AuthenticationActivity
 import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
-fun ChatScreen(userName: String, viewModel: ChatViewModel): Unit {
+fun ChatScreen(userName: String, viewModel: ChatViewModel) {
 
     val context = LocalContext.current
     LaunchedEffect(key1 = true) {
@@ -71,7 +68,9 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel): Unit {
     val state = viewModel.state.value
     Column(modifier = Modifier
             .fillMaxSize()
+            .background(Color.White)
             .padding(16.dp))
+
     {
         LazyColumn(modifier = Modifier
                 .weight(1f)
@@ -118,7 +117,8 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel): Unit {
             }
 
         }
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
             TextField(value = viewModel.messageText.value, onValueChange = viewModel::onMessageChange, placeholder = {
                 Text(text = "Enter Message", modifier = Modifier.weight(1f))
             }
@@ -127,21 +127,14 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel): Unit {
 
             IconButton(onClick = {
 
-                context.startActivity(Intent(context, AuthenticationActivity::class.java))
+                if (viewModel.messageText.value.isNotEmpty())
+                    viewModel.sendMessage()
+                else
+                    Toast.makeText(context, "enter text", Toast.LENGTH_SHORT).show()
+
             }, modifier = Modifier.padding(end = 10.dp)) {
-                Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription ="Send")
+                Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "Send")
             }
         }
     }
-
-
-    var sss: String = "{\n" +
-            "                   \"command\": \"content\",\n" +
-            "                   \"message\": \"cccccc\",\n" +
-            "                   \"user\":  \"ccc@ccc.com\",\n" +
-            "                   \"pageNumber\":1,\n" +
-            "                   \"blocked_user\":[]\n" +
-            "               }"
-    viewModel.onMessageChange(sss)
-
 }
