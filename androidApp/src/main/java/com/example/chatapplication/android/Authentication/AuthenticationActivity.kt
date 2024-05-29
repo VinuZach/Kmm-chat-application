@@ -29,10 +29,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.chatapplication.android.Authentication.ui.theme.ChatApplicationTheme
 import com.example.chatapplication.android.MainActivity
 
-class AuthenticationActivity : ComponentActivity()
-{
-    override fun onCreate(savedInstanceState: Bundle?)
-    {
+class AuthenticationActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -45,17 +43,13 @@ class AuthenticationActivity : ComponentActivity()
                     NavHost(navController = navController, startDestination = "user_authentication") {
 
                         composable(route = "user_authentication") {
-                            UserAuthenticationFullPage(onNavigate = object : onNavigate
-                            {
-                                override fun onTaskPerformed(navigate: String)
-                                {
-                                    if (navigate == "complete")
-                                    {
+                            UserAuthenticationFullPage(onNavigate = object : onNavigate {
+                                override fun onTaskPerformed(navigate: String) {
+                                    if (navigate == "complete") {
                                         finish()
                                         startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
-                                    }
-                                    else
-                                    navController.navigate(navigate)
+                                    } else
+                                        navController.navigate(navigate)
                                 }
 
                             })

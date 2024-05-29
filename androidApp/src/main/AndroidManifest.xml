@@ -12,7 +12,7 @@
             android:name="startactivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize"
-            android:targetActivity=".Authentication.AuthenticationActivity">
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
