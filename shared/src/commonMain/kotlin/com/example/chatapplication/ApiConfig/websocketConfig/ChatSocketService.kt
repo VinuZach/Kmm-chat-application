@@ -1,5 +1,8 @@
 package com.example.chatapplication.ApiConfig.websocketConfig
 
+import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupDetailsResponseDto
+import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupListRequestData
+import com.example.chatapplication.ApiConfig.websocketConfig.model.MessageDto
 import com.example.chatapplication.getHttpClientForWebSocket
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.url
@@ -21,8 +24,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
 import io.ktor.utils.io.core.Closeable
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+
 class ChatSocketService {
 
     private var socket: WebSocketSession? = null
@@ -88,6 +90,24 @@ class ChatSocketService {
         } catch (e: Exception) {
             e.printStackTrace()
             flow<MessageDto> { }.asCommonFlow()
+        }
+    }
+
+    fun observeGroupList(): CommonFlow<GroupDetailsResponseDto> {
+        return try {
+            socket?.incoming?.receiveAsFlow()?.filter {
+                it is Frame.Text
+            }?.map {
+                val json = (it as Frame.Text).readText()
+
+                val messageDto = Json.decodeFromString<GroupDetailsResponseDto>(json)
+                messageDto
+
+            }?.asCommonFlow() ?: flow<GroupDetailsResponseDto> { }.asCommonFlow()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            flow<GroupDetailsResponseDto> { }.asCommonFlow()
         }
     }
 

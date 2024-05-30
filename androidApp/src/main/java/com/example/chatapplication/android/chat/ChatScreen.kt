@@ -35,11 +35,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatMessageRequest
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
-fun ChatScreen(userName: String, viewModel: ChatViewModel) {
+fun ChatScreen(userName: String, viewModel: ChatViewModel)
+{
 
     val context = LocalContext.current
     LaunchedEffect(key1 = true) {
@@ -52,12 +55,9 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel) {
 
     DisposableEffect(key1 = lifeCycleOwner) {
 
-        val observer = LifecycleEventObserver()
-        { _, event ->
-            if (event == Lifecycle.Event.ON_START)
-                viewModel.initSession("/43/")
-            else if (event == Lifecycle.Event.ON_STOP)
-                viewModel.disconnect()
+        val observer = LifecycleEventObserver() { _, event ->
+            if (event == Lifecycle.Event.ON_START) viewModel.initSessionForChatRoom("/43/")
+            else if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
         }
         lifeCycleOwner.lifecycle.addObserver(observer)
         onDispose {
@@ -66,49 +66,42 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel) {
 
     }
     val state = viewModel.state.value
-    Column(modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp))
+    Column(modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp))
 
     {
-        LazyColumn(modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(), reverseLayout = true) {
+        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth(), reverseLayout = true) {
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
-            items(items = state.messages)
-            { message ->
+            items(items = state.messages) { message ->
                 val isOwnMessage = message.user == userName
                 Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                     modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier
-                            .width(200.dp)
-                            .padding(10.dp)
-                            .drawBehind {
-                                val cornerRadius = 10.dp.toPx()
-                                val triangleHeight = 20.dp.toPx()
-                                val trianggleWidth = 25.dp.toPx()
-                                val trianglePath = Path().apply {
-                                    if (isOwnMessage) {
-                                        moveTo(size.width, size.height - cornerRadius)
-                                        lineTo(size.width, size.height + triangleHeight)
-                                        lineTo(size.width - trianggleWidth, size.height - cornerRadius)
-                                        close()
-                                    } else {
-                                        moveTo(0f, size.height - cornerRadius)
-                                        lineTo(0f, size.height + triangleHeight)
-                                        lineTo(trianggleWidth, size.height - cornerRadius)
-                                        close()
-                                    }
-
+                    Column(modifier = Modifier.width(200.dp).padding(10.dp).drawBehind {
+                            val cornerRadius = 10.dp.toPx()
+                            val triangleHeight = 20.dp.toPx()
+                            val trianggleWidth = 25.dp.toPx()
+                            val trianglePath = Path().apply {
+                                if (isOwnMessage)
+                                {
+                                    moveTo(size.width, size.height - cornerRadius)
+                                    lineTo(size.width, size.height + triangleHeight)
+                                    lineTo(size.width - trianggleWidth, size.height - cornerRadius)
+                                    close()
                                 }
-                                drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.DarkGray)
+                                else
+                                {
+                                    moveTo(0f, size.height - cornerRadius)
+                                    lineTo(0f, size.height + triangleHeight)
+                                    lineTo(trianggleWidth, size.height - cornerRadius)
+                                    close()
+                                }
 
                             }
-                            .background(color = if (isOwnMessage) Color.Green else Color.DarkGray, shape = RoundedCornerShape(10.dp))
-                            .padding(8.dp)) {
+                            drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.DarkGray)
+
+                        }.background(color = if (isOwnMessage) Color.Green else Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                        .padding(8.dp)) {
                         Text(text = message.user, fontWeight = FontWeight.Bold)
                         Text(text = message.message)
 
@@ -123,14 +116,17 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel) {
                 Text(text = "Enter Message", modifier = Modifier.weight(1f))
             }
 
-            )
+                     )
 
             IconButton(onClick = {
 
                 if (viewModel.messageText.value.isNotEmpty())
-                    viewModel.sendMessage()
-                else
-                    Toast.makeText(context, "enter text", Toast.LENGTH_SHORT).show()
+                {
+                    val sendMessage = ChatMessageRequest(command = "content", user = "ccc@ccc.com", message = viewModel.messageText.value,
+                        blocked_user = emptyList(), pageNumber = 1)
+                    viewModel.sendMessage(Gson().toJson(sendMessage))
+                }
+                else Toast.makeText(context, "enter text", Toast.LENGTH_SHORT).show()
 
             }, modifier = Modifier.padding(end = 10.dp)) {
                 Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "Send")
