@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity()
             }
             composable("group_and_chat_listing")
             {
-                ChatGroupAndListingMain(){
+                ChatGroupAndListingMain(viewModel = chatViewModel){
                     navController.navigate(NavigationChatRoomId(it))
                 }
 

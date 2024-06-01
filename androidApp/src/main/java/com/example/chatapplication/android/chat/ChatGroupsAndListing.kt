@@ -1,5 +1,6 @@
 package com.example.chatapplication.android.chat
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,15 +17,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
 import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupListRequestData
 import com.google.gson.Gson
@@ -36,13 +42,31 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToR
 {
 
 
+
     val retrieveChatOfGroup :(Int)->Unit ={
 
         retrieveChatListBasedOnGroup(viewModel, groupId = it)
     }
-    retrieveChatOfGroup.invoke(-1)
+    val lifeCycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(key1 = lifeCycleOwner) {
+
+        val observer = LifecycleEventObserver() { _, event ->
+            Log.d("awhew", "ChatGroupAndListingMain: $event")
+            if (event == Lifecycle.Event.ON_START)  retrieveChatOfGroup.invoke(-1)
+            else if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
+        }
+        lifeCycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifeCycleOwner.lifecycle.removeObserver(observer)
+        }
+
+    }
+    Log.e("awhew", "retrieveChatListBasedOnGroup: ${viewModel.state.value.groupDetailsList}")
     LongPressDraggable(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()   .background(Color.LightGray)) {
+        Column(modifier = Modifier
+                .fillMaxSize()
+                .background(Color.LightGray)) {
 
 
             LazyRow(modifier = Modifier
@@ -75,6 +99,8 @@ fun retrieveChatListBasedOnGroup(viewModel:ChatViewModel,groupId:Int): Unit {
 
     viewModel.initSessionForGroupListing("/chatList")
     {
+        Log.e("awhew", "retrieveChatListBasedOnGroup: $groupId")
+
         val groupListRequestData=GroupListRequestData("aaa@aaa.com",groupId)
         viewModel.sendMessage(Gson().toJson(groupListRequestData))
     }
@@ -120,13 +146,15 @@ fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTota
             .fillMaxWidth()
             .background(Color.Transparent)
             .padding(10.dp)) {
-        DragTarget(modifier = Modifier.fillMaxWidth().clickable {
+        DragTarget(modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
 
-            chatRoomDetails.roomID?.let {roomId->
-                redirectToRoomById.invoke(roomId)
-            }
+                    chatRoomDetails.roomID?.let { roomId ->
+                        redirectToRoomById.invoke(roomId)
+                    }
 
-        }, dataToDrop = chatRoomDetails) {
+                }, dataToDrop = chatRoomDetails) {
             Text(text = chatRoomDetails.roomName,)
         }
     }

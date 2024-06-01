@@ -1,5 +1,6 @@
 package com.example.chatapplication.android.chat
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +58,7 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int)
     DisposableEffect(key1 = lifeCycleOwner) {
 
         val observer = LifecycleEventObserver() { _, event ->
+            Log.d("awhew", "cccc : $event")
             if (event == Lifecycle.Event.ON_START) viewModel.initSessionForChatRoom("/$roomId/")
             else if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
         }
