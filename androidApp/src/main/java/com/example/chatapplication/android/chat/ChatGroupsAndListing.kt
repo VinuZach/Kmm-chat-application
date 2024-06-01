@@ -18,13 +18,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,7 +37,7 @@ import com.google.gson.Gson
 
 @Preview
 @Composable
-fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToRoomById:(Int)->Unit={})
+fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToRoomById:(Int,String)->Unit = { a,b->})
 {
 
 
@@ -47,7 +46,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToR
 
         retrieveChatListBasedOnGroup(viewModel, groupId = it)
     }
-    val lifeCycleOwner = LocalLifecycleOwner.current
+    val lifeCycleOwner = LocalSavedStateRegistryOwner.current
 
     DisposableEffect(key1 = lifeCycleOwner) {
 
@@ -95,7 +94,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToR
 }
 
 
-fun retrieveChatListBasedOnGroup(viewModel:ChatViewModel,groupId:Int): Unit {
+fun retrieveChatListBasedOnGroup(viewModel:ChatViewModel,groupId:Int) {
 
     viewModel.initSessionForGroupListing("/chatList")
     {
@@ -140,7 +139,7 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
 
 @Preview
 @Composable
-fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),redirectToRoomById: (Int) -> Unit={})
+fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),redirectToRoomById: (Int,String) -> Unit={ a,b->})
 {
     Row(Modifier
             .fillMaxWidth()
@@ -150,8 +149,8 @@ fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTota
                 .fillMaxWidth()
                 .clickable {
 
-                    chatRoomDetails.roomID?.let { roomId ->
-                        redirectToRoomById.invoke(roomId)
+                    chatRoomDetails.let { roomId ->
+                        redirectToRoomById.invoke(roomId.roomID!!,roomId.roomName)
                     }
 
                 }, dataToDrop = chatRoomDetails) {

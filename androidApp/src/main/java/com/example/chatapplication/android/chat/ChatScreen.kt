@@ -31,20 +31,20 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatMessageRequest
-import com.example.chatapplication.android.NavigationChatRoomId
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
-fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int)
+fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int,roomName:String)
 {
+
 
     val context = LocalContext.current
     LaunchedEffect(key1 = true) {
@@ -53,7 +53,7 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int)
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
-    val lifeCycleOwner = LocalLifecycleOwner.current
+    val lifeCycleOwner = LocalSavedStateRegistryOwner.current
 
     DisposableEffect(key1 = lifeCycleOwner) {
 
@@ -75,6 +75,8 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int)
             .padding(16.dp))
 
     {
+
+        Text(text =roomName )
         LazyColumn(modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(), reverseLayout = true) {
@@ -106,10 +108,10 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int)
                                     }
 
                                 }
-                                drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.DarkGray)
+                                drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.LightGray)
 
                             }
-                            .background(color = if (isOwnMessage) Color.Green else Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                            .background(color = if (isOwnMessage) Color.Green else Color.LightGray, shape = RoundedCornerShape(10.dp))
                             .padding(8.dp)) {
                         Text(text = message.user, fontWeight = FontWeight.Bold)
                         Text(text = message.message)
