@@ -27,6 +27,7 @@ class ChatViewModel : ViewModel() {
 
     private val _toastEvent = MutableSharedFlow<String>()
     val toastEvent = _toastEvent.asSharedFlow()
+    var groupListed=false
 
     fun initSessionForGroupListing(groupId:String,onConnected:(()->Unit)?=null)
     {

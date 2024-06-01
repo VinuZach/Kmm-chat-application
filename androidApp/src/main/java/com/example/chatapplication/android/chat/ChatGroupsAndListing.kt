@@ -1,6 +1,7 @@
 package com.example.chatapplication.android.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,37 +25,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
 import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupListRequestData
 import com.google.gson.Gson
 
 
 @Preview
 @Composable
-fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel())
+fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToRoomById:(Int)->Unit={})
 {
-    viewModel.initSessionForGroupListing("/chatList")
-    {
-        val groupListRequestData=GroupListRequestData("aaa@aaa.com",-1)
-        viewModel.sendMessage(Gson().toJson(groupListRequestData))
+
+
+    val retrieveChatOfGroup :(Int)->Unit ={
+
+        retrieveChatListBasedOnGroup(viewModel, groupId = it)
     }
-
-
+    retrieveChatOfGroup.invoke(-1)
     LongPressDraggable(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()   .background(Color.LightGray)) {
 
 
-            LazyRow(modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 50.dp).background(Color.LightGray),
+            LazyRow(modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 50.dp)
+                 ,
                 horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                items(items = viewModel.state.value.groupDetailsList.clusterRoomGroups)
                {
-                    GroupItemDetail(groupName = "group name ${it.roomName}")
+                    GroupItemDetail(groupDetails = it,retrieveChatOfGroup)
                 }
 
             }
-            LazyColumn(modifier = Modifier.background(Color.LightGray).padding(top = 10.dp).fillMaxHeight()) {
+            LazyColumn(modifier = Modifier
+                    .background(Color.LightGray)
+                    .padding(top = 10.dp)
+                    .fillMaxHeight()) {
 
-                items(count = 10) {
-                    ChatItemDetails(chatTitle = "chat item $it")
+                items(items = viewModel.state.value.groupDetailsList.chatRoomWithTotalMessage) {
+                    ChatItemDetails(chatRoomDetails = it,redirectToRoomById)
                 }
             }
         }
@@ -62,9 +70,18 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel())
 
 }
 
+
+fun retrieveChatListBasedOnGroup(viewModel:ChatViewModel,groupId:Int): Unit {
+
+    viewModel.initSessionForGroupListing("/chatList")
+    {
+        val groupListRequestData=GroupListRequestData("aaa@aaa.com",groupId)
+        viewModel.sendMessage(Gson().toJson(groupListRequestData))
+    }
+}
 @Preview
 @Composable
-fun GroupItemDetail(groupName: String = "sample Group ")
+fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),getChatListOfGroupId:(Int)->Unit={})
 {
     val chatToGroupList = remember {
         mutableStateMapOf<String, String>()
@@ -75,8 +92,14 @@ fun GroupItemDetail(groupName: String = "sample Group ")
         chatGroupItem?.let {
             if (isInBound) chatToGroupList[chatGroupItem] = chatGroupItem
         }
-        Card(modifier = Modifier) {
-            Column(modifier = Modifier.background(bgColor).fillMaxWidth().padding(10.dp)) {
+        val groupName=groupDetails.roomName
+        Card(modifier = Modifier.clickable {
+            getChatListOfGroupId.invoke(groupDetails.clusterGroupId.toInt())
+        }) {
+            Column(modifier = Modifier
+                    .background(bgColor)
+                    .fillMaxWidth()
+                    .padding(10.dp)) {
                 if (chatToGroupList.isNotEmpty())
                 {
                     Text(text = groupName, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.ExtraBold)
@@ -91,11 +114,20 @@ fun GroupItemDetail(groupName: String = "sample Group ")
 
 @Preview
 @Composable
-fun ChatItemDetails(chatTitle: String = "sample chat item")
+fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),redirectToRoomById: (Int) -> Unit={})
 {
-    Row(Modifier.fillMaxWidth().background(Color.Transparent).padding(10.dp)) {
-        DragTarget(modifier = Modifier.fillMaxWidth(), dataToDrop = chatTitle) {
-            Text(text = chatTitle,)
+    Row(Modifier
+            .fillMaxWidth()
+            .background(Color.Transparent)
+            .padding(10.dp)) {
+        DragTarget(modifier = Modifier.fillMaxWidth().clickable {
+
+            chatRoomDetails.roomID?.let {roomId->
+                redirectToRoomById.invoke(roomId)
+            }
+
+        }, dataToDrop = chatRoomDetails) {
+            Text(text = chatRoomDetails.roomName,)
         }
     }
 

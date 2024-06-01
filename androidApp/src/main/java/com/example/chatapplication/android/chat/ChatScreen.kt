@@ -36,12 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatMessageRequest
+import com.example.chatapplication.android.NavigationChatRoomId
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
-fun ChatScreen(userName: String, viewModel: ChatViewModel)
+fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int)
 {
 
     val context = LocalContext.current
@@ -56,7 +57,7 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel)
     DisposableEffect(key1 = lifeCycleOwner) {
 
         val observer = LifecycleEventObserver() { _, event ->
-            if (event == Lifecycle.Event.ON_START) viewModel.initSessionForChatRoom("/43/")
+            if (event == Lifecycle.Event.ON_START) viewModel.initSessionForChatRoom("/$roomId/")
             else if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
         }
         lifeCycleOwner.lifecycle.addObserver(observer)
@@ -66,10 +67,15 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel)
 
     }
     val state = viewModel.state.value
-    Column(modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp))
+    Column(modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(16.dp))
 
     {
-        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth(), reverseLayout = true) {
+        LazyColumn(modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(), reverseLayout = true) {
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
@@ -77,31 +83,32 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel)
                 val isOwnMessage = message.user == userName
                 Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                     modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.width(200.dp).padding(10.dp).drawBehind {
-                            val cornerRadius = 10.dp.toPx()
-                            val triangleHeight = 20.dp.toPx()
-                            val trianggleWidth = 25.dp.toPx()
-                            val trianglePath = Path().apply {
-                                if (isOwnMessage)
-                                {
-                                    moveTo(size.width, size.height - cornerRadius)
-                                    lineTo(size.width, size.height + triangleHeight)
-                                    lineTo(size.width - trianggleWidth, size.height - cornerRadius)
-                                    close()
+                    Column(modifier = Modifier
+                            .width(200.dp)
+                            .padding(10.dp)
+                            .drawBehind {
+                                val cornerRadius = 10.dp.toPx()
+                                val triangleHeight = 20.dp.toPx()
+                                val triangleWidth = 25.dp.toPx()
+                                val trianglePath = Path().apply {
+                                    if (isOwnMessage) {
+                                        moveTo(size.width, size.height - cornerRadius)
+                                        lineTo(size.width, size.height + triangleHeight)
+                                        lineTo(size.width - triangleWidth, size.height - cornerRadius)
+                                        close()
+                                    } else {
+                                        moveTo(0f, size.height - cornerRadius)
+                                        lineTo(0f, size.height + triangleHeight)
+                                        lineTo(triangleWidth, size.height - cornerRadius)
+                                        close()
+                                    }
+
                                 }
-                                else
-                                {
-                                    moveTo(0f, size.height - cornerRadius)
-                                    lineTo(0f, size.height + triangleHeight)
-                                    lineTo(trianggleWidth, size.height - cornerRadius)
-                                    close()
-                                }
+                                drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.DarkGray)
 
                             }
-                            drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.DarkGray)
-
-                        }.background(color = if (isOwnMessage) Color.Green else Color.DarkGray, shape = RoundedCornerShape(10.dp))
-                        .padding(8.dp)) {
+                            .background(color = if (isOwnMessage) Color.Green else Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                            .padding(8.dp)) {
                         Text(text = message.user, fontWeight = FontWeight.Bold)
                         Text(text = message.message)
 
