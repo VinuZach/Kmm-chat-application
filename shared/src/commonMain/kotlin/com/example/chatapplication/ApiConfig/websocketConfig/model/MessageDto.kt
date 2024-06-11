@@ -12,8 +12,3 @@ data class MessageDto(var message: String, var user: String, var new_page_number
 
 data class ChatMessageRequest(var command: String, var message: String, var user: String, var pageNumber: Int, var blocked_user: List<String>)
 
-@Serializable
-data class GroupDetailsResponseDto(val chatRoomWithTotalMessage: List<ChatRoomWithTotalMessage> = emptyList(),val clusterRoomGroups:List<ChatRoomWithTotalMessage> = emptyList(),val Chat_Type:String="")
-
-@Serializable
-data class ChatRoomWithTotalMessage(val  roomID:Int?=null,val roomName:String="",val  clusterGroupId:String="",val totalMessages:Int=0)

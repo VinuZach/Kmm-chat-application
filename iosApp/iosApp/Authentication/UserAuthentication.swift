@@ -25,6 +25,7 @@ struct UserAuthentication: View {
         NavigationStack(path: $viewModel.navigationPath)
         {
             
+        
             VStack(alignment: .center, spacing: 8)
                {
                    

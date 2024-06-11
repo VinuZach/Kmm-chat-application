@@ -12,96 +12,212 @@ struct ContentView: View {
     )
     
     var body: some View {
-        NavigationView
+        
+        NavigationStack(path:$viewModel.navigationPath)
         {
-            
-            VStack
-            {
-                List() {
-                    ForEach(viewModel.chatMessageList, id: \.self) { messageItem in
-                        Text(messageItem.message)
-                            .padding(10)
-                    }
-                }
-                HStack
+            groupListingView
+          
+            .navigationDestination(for: ChatRoomWithTotalMessage.self)
+            { destination in
+                
+                VStack
                 {
-                    TextField("type message", text: $viewModel.sendMessageData)
-                        .keyboardType(.asciiCapable)
-                    Button("send")
+                    HStack
                     {
-                        print(viewModel.sendMessage)
-                        viewModel.sendMessage()
+                        Text(destination.roomName)
                     }
-                }.padding(.horizontal,30)
+                        List() {
+                        ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
+                            Text(messageItem.message)
+                                .padding(10)
+                                .rotationEffect(.radians(.pi))
+                                .scaleEffect(x: -1, y: 1, anchor: .center)
+                        }
+                    }.rotationEffect(.radians(.pi))
+                        .scaleEffect(x: -1, y: 1, anchor: .center)
+                    HStack
+                    {
+                        TextField("type message", text: $viewModel.sendMessageData)
+                            .keyboardType(.asciiCapable)
+                        Button("send")
+                        {
+                            print(viewModel.sendMessage)
+                            viewModel.sendMessage(messageToSendJSON: "Asd")
+                        }
+                    }.padding(.horizontal,30)
+                }
+            }
+        }
+        
+//        NavigationView
+//        {
+            
+        
+        
+            
+//        }.navigationBarBackButtonHidden(true)
+//            .onAppear { print("🔴 OnAppear") }
+//            .onDisappear { print("🔴 OnDisappear") }
+    }
+    
+    var groupListingView:some View
+    {
+     
+        VStack
+        {
+            let groupDetailsList = viewModel.groupListingWithChat?.clusterRoomGroups ?? [ChatRoomWithTotalMessage]()
+            
+            ScrollView() {
+                LazyHStack() {
+                     ForEach(groupDetailsList,id: \.clusterGroupId)
+                    {
+                        groupDetails in
+                        Text(groupDetails.roomName).padding(10)
+                            .overlay(RoundedRectangle(cornerRadius: 5)
+                                        .stroke(.gray, lineWidth: 1))
+                            .onTapGesture {
+                                viewModel.retrieveGroupDetails(groupDetails: groupDetails)
+                            }
+                    }
+
+                     .listStyle(.plain)
+                }
+            }.frame(maxWidth:.infinity)
+                .background(.red)
+            let chatMessageList = viewModel.groupListingWithChat?.chatRoomWithTotalMessage ??
+            [ChatRoomWithTotalMessage]()
+            
+            if viewModel.selectedRoomGroup != nil
+            {
+                ZStack
+                {
+                    HStack{
+                        Image(systemName: "chevron.backward")
+                            .onTapGesture {
+                                viewModel.retrieveGroupDetails(groupDetails: nil)
+                            }.padding(.horizontal,20)
+                        Text(viewModel.selectedRoomGroup!.roomName)
+                        Spacer()
+                    }
+                    .padding(.vertical,10)
+                    
+                }
+            }
+            List(chatMessageList,id: \.roomID) {
+                chatMessageDetails in
+                Text(chatMessageDetails.roomName)
+                    .onTapGesture {
+                        viewModel.navigationPath.append(chatMessageDetails)
+                    }
             }
             
-        }.navigationBarBackButtonHidden(true)
-            .onAppear { print("🔴 OnAppear") }
-            .onDisappear { print("🔴 OnDisappear") }
+        }
+        
     }
 }
-
 
 #Preview {
     ContentView(viewModel: ContentView.ViewModel())
 }
+
+
 extension ContentView {
     class ViewModel: ObservableObject {
         @Published var chatMessageList=[MessageDto]()
         @Published var sendMessageData = ""
+        @Published var groupListingWithChat :GroupDetailsResponseDto?
         var isWebSocketConnect = false
+        @Published var navigationPath = [ChatRoomWithTotalMessage]()
+        var selectedRoomGroup: ChatRoomWithTotalMessage? = nil
         var webSocket = Greeting().provideChatSocketService()
         init() {
-            initSocketConnection()
+            initGroupListingSocketConnection()
         }
         
-        func initSocketConnection()  {
+        func initGroupListingSocketConnection()  {
+            DispatchQueue.main.async {
+                self.initSocketConnection(webSocketLink: "/chatList", isForChat: false){
+                  print("aaaaa")
+                    self.retrieveGroupDetails(groupDetails: nil)
+
+                }
+                
+            }
+        }
+        
+        func initChatRoomSocketConnection()  {
+            DispatchQueue.main.async {
+                self.initSocketConnection(webSocketLink: "/chatList", isForChat: true){
+                  print("aaaaa")
+            
+                }
+                
+            }
+        }
+        
+        func retrieveGroupDetails(groupDetails:ChatRoomWithTotalMessage?)  {
+            selectedRoomGroup=groupDetails
+            let clusterIdString :String = groupDetails?.clusterGroupId ?? "-1"
+            let clusterId:Int32 = Int32(clusterIdString) ?? -1
+            
+            let groupListRequestData=GroupListRequestData(user: "aaa@aaa.com", clusterId:clusterId)
+       
+        print(groupListRequestData.groupListToString())
+        self.sendMessage(messageToSendJSON: groupListRequestData.groupListToString())
+        }
+        
+        
+        func initSocketConnection(webSocketLink:String,isForChat:Bool, onConnected: @escaping()->())  {
             DispatchQueue.main.async { [self] in
-                webSocket.doInitSession(roomId: "/43/",completionHandler:
+                webSocket.doInitSession(roomId: webSocketLink,completionHandler:
                                             { [self] resource,error in
                     
                     self.isWebSocketConnect = (resource is ResourceSuccess)
                     if resource is ResourceSuccess
                     {
+                      
                         
-                        print("aaaaa")
-                        webSocket.observeMessages().watch(block:{
-                            message in
-                            if message != nil
-                            {
-                                self.chatMessageList.append(message!)
-                            }
-                        })
+                        if isForChat
+                        {
+                            webSocket.observeMessages().watch(block:{
+                                message in
+                                if message != nil
+                                {
+                                    self.chatMessageList.append(message!)
+                                }
+                            })
+                        }
+                        else
+                        {
+                            
+                            webSocket.observeGroupList().watch(block: {
+                                
+                                groupListDetails in
+                             
+                                if groupListDetails != nil
+                                {
+                                    self.groupListingWithChat=groupListDetails ?? nil
+                                }
+                            })
+                        }
+                        onConnected()
                     }
                     
                 })
                 
             }
         }
-        struct Message :Encodable
-        {
-            var command:String
-            var message:String
-            var user:String
-            var pageNumber:Int
-            var blocked_user:[String]
-            
-        }
-        func sendMessage()  {
+   
+        func sendMessage(messageToSendJSON:String)  {
             if isWebSocketConnect
             {
-                let messageToSend = Message(command: "content", message: sendMessageData, user: "ccc@ccc.com", pageNumber: 1, blocked_user:  [String]())
-                do {
-                    let jsonData = try JSONEncoder().encode(messageToSend)
-                    let jsonString = String(data: jsonData, encoding: .utf8)!
-                    print(jsonString) // [{"sentence":"Hello world","lang":"en"},{"sentence":"Hallo Welt","lang":"de"}]
-                    
-                    webSocket.sendMessage(message: jsonString, completionHandler: {
+                DispatchQueue.main.async {
+                    self.webSocket.sendMessage(message: messageToSendJSON, completionHandler: {
                         error in
-                        print(error)
+                        print(error ?? "")
                         self.sendMessageData=""
                     })
-                } catch { print(error) }
+                }
 
             }
         }

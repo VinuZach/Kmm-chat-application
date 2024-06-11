@@ -14,11 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,14 +41,15 @@ import com.google.gson.Gson
 
 @Preview
 @Composable
-fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToRoomById:(Int,String)->Unit = { a,b->})
-{
+fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirectToRoomById: (Int, String) -> Unit = { a, b -> }) {
 
 
-
-    val retrieveChatOfGroup :(Int)->Unit ={
-
-        retrieveChatListBasedOnGroup(viewModel, groupId = it)
+    val selectedGroupName = remember {
+        mutableStateOf<String?>(null)
+    }
+    val retrieveChatOfGroup: (Int, String?) -> Unit = { groupId, groupName ->
+        selectedGroupName.value = groupName
+        retrieveChatListBasedOnGroup(viewModel, groupId = groupId)
     }
     val lifeCycleOwner = LocalSavedStateRegistryOwner.current
 
@@ -52,7 +57,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToR
 
         val observer = LifecycleEventObserver() { _, event ->
             Log.d("awhew", "ChatGroupAndListingMain: $event")
-            if (event == Lifecycle.Event.ON_START)  retrieveChatOfGroup.invoke(-1)
+            if (event == Lifecycle.Event.ON_START) retrieveChatOfGroup.invoke(-1, null)
             else if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
         }
         lifeCycleOwner.lifecycle.addObserver(observer)
@@ -70,12 +75,21 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToR
 
             LazyRow(modifier = Modifier
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 50.dp)
-                 ,
+                    .defaultMinSize(minHeight = 50.dp),
                 horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-               items(items = viewModel.state.value.groupDetailsList.clusterRoomGroups)
-               {
-                    GroupItemDetail(groupDetails = it,retrieveChatOfGroup)
+                items(items = viewModel.state.value.groupDetailsList.clusterRoomGroups)
+                {
+                    GroupItemDetail(groupDetails = it, retrieveChatOfGroup)
+                }
+
+            }
+            selectedGroupName.value?.let {
+                Row {
+                    Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = "back", modifier = Modifier.clickable {
+                        selectedGroupName.value = null
+                        retrieveChatOfGroup.invoke(-1,null)
+                    })
+                    Text(text = it, fontSize = 20.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 10.dp))
                 }
 
             }
@@ -85,7 +99,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToR
                     .fillMaxHeight()) {
 
                 items(items = viewModel.state.value.groupDetailsList.chatRoomWithTotalMessage) {
-                    ChatItemDetails(chatRoomDetails = it,redirectToRoomById)
+                    ChatItemDetails(chatRoomDetails = it, redirectToRoomById)
                 }
             }
         }
@@ -94,43 +108,42 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel=ChatViewModel(),redirectToR
 }
 
 
-fun retrieveChatListBasedOnGroup(viewModel:ChatViewModel,groupId:Int) {
+fun retrieveChatListBasedOnGroup(viewModel: ChatViewModel, groupId: Int) {
 
     viewModel.initSessionForGroupListing("/chatList")
     {
         Log.e("awhew", "retrieveChatListBasedOnGroup: $groupId")
 
-        val groupListRequestData=GroupListRequestData("aaa@aaa.com",groupId)
+        val groupListRequestData = GroupListRequestData("aaa@aaa.com", groupId)
         viewModel.sendMessage(Gson().toJson(groupListRequestData))
     }
 }
+
 @Preview
 @Composable
-fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),getChatListOfGroupId:(Int)->Unit={})
-{
+fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),
+    getChatListOfGroupId: (Int, String?) -> Unit = { a, b -> }) {
     val chatToGroupList = remember {
-        mutableStateMapOf<String, String>()
+        mutableStateMapOf<Int, Int>()
     }
-    DropTarget<String>(modifier = Modifier.padding(6.dp)) { isInBound, chatGroupItem ->
+    DropTarget<ChatRoomWithTotalMessage>(modifier = Modifier.padding(6.dp)) { isInBound, chatGroupItem ->
         val bgColor = if (isInBound) Color.Red else Color.White
 
         chatGroupItem?.let {
-            if (isInBound) chatToGroupList[chatGroupItem] = chatGroupItem
+            if (isInBound) chatToGroupList[chatGroupItem.roomID!!] = chatGroupItem.roomID!!
         }
-        val groupName=groupDetails.roomName
+        val groupName = groupDetails.roomName
         Card(modifier = Modifier.clickable {
-            getChatListOfGroupId.invoke(groupDetails.clusterGroupId.toInt())
+            getChatListOfGroupId.invoke(groupDetails.clusterGroupId.toInt(), groupName)
         }) {
             Column(modifier = Modifier
                     .background(bgColor)
                     .fillMaxWidth()
                     .padding(10.dp)) {
-                if (chatToGroupList.isNotEmpty())
-                {
+                if (chatToGroupList.isNotEmpty()) {
                     Text(text = groupName, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.ExtraBold)
                     Text(text = "${chatToGroupList.size} Items", fontSize = 14.sp, color = Color.Black)
-                }
-                else Text(text = groupName, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.ExtraBold)
+                } else Text(text = groupName, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.ExtraBold)
             }
         }
 
@@ -139,8 +152,8 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
 
 @Preview
 @Composable
-fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),redirectToRoomById: (Int,String) -> Unit={ a,b->})
-{
+fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),
+    redirectToRoomById: (Int, String) -> Unit = { a, b -> }) {
     Row(Modifier
             .fillMaxWidth()
             .background(Color.Transparent)
@@ -150,11 +163,11 @@ fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTota
                 .clickable {
 
                     chatRoomDetails.let { roomId ->
-                        redirectToRoomById.invoke(roomId.roomID!!,roomId.roomName)
+                        redirectToRoomById.invoke(roomId.roomID!!, roomId.roomName)
                     }
 
                 }, dataToDrop = chatRoomDetails) {
-            Text(text = chatRoomDetails.roomName,)
+            Text(text = chatRoomDetails.roomName)
         }
     }
 
