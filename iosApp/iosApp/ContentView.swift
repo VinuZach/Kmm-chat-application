@@ -20,6 +20,8 @@ struct ContentView: View {
             .navigationDestination(for: ChatRoomWithTotalMessage.self)
             { destination in
                 
+               let _ = print(destination)
+               
                 VStack
                 {
                     HStack
@@ -41,25 +43,23 @@ struct ContentView: View {
                             .keyboardType(.asciiCapable)
                         Button("send")
                         {
-                            print(viewModel.sendMessage)
-                            viewModel.sendMessage(messageToSendJSON: "Asd")
+                           
+
+                            let messageToSend=ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "aaa@aaa.com", pageNumber: 1, blocked_user: [String]())
+                            viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
                         }
                     }.padding(.horizontal,30)
                 }
+                .onAppear(perform: {
+                    viewModel.initChatRoomSocketConnection(roomId: destination.roomID!)
+                })
             }
         }
-        
-//        NavigationView
-//        {
-            
-        
-        
-            
-//        }.navigationBarBackButtonHidden(true)
-//            .onAppear { print("🔴 OnAppear") }
-//            .onDisappear { print("🔴 OnDisappear") }
+                  
+ 
     }
     
+  
     var groupListingView:some View
     {
      
@@ -112,6 +112,10 @@ struct ContentView: View {
             }
             
         }
+        .onAppear(perform: {
+            print("group appear ")
+            viewModel.initGroupListingSocketConnection()
+        })
         
     }
 }
@@ -130,9 +134,7 @@ extension ContentView {
         @Published var navigationPath = [ChatRoomWithTotalMessage]()
         var selectedRoomGroup: ChatRoomWithTotalMessage? = nil
         var webSocket = Greeting().provideChatSocketService()
-        init() {
-            initGroupListingSocketConnection()
-        }
+      
         
         func initGroupListingSocketConnection()  {
             DispatchQueue.main.async {
@@ -145,9 +147,9 @@ extension ContentView {
             }
         }
         
-        func initChatRoomSocketConnection()  {
+        func initChatRoomSocketConnection(roomId:KotlinInt)  {
             DispatchQueue.main.async {
-                self.initSocketConnection(webSocketLink: "/chatList", isForChat: true){
+                self.initSocketConnection(webSocketLink: "/\(roomId)/", isForChat: true){
                   print("aaaaa")
             
                 }
@@ -183,7 +185,11 @@ extension ContentView {
                                 message in
                                 if message != nil
                                 {
-                                    self.chatMessageList.append(message!)
+                                    if !self.chatMessageList.contains(message!)
+                                    {
+                                        self.chatMessageList.append(message!)
+                                    }
+                                   
                                 }
                             })
                         }
