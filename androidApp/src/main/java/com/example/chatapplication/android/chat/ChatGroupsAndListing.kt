@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -67,6 +69,55 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirect
 
     }
     Log.e("awhew", "retrieveChatListBasedOnGroup: ${viewModel.state.value.groupDetailsList}")
+
+    val displayRoomToGroup: @Composable (ChatRoomWithTotalMessage, ChatRoomWithTotalMessage) -> Unit = { groupDetails, chatDetails ->
+        Log.d("asdasd", "GroupItemDetail: ${groupDetails.roomName}  ${chatDetails.roomName}")
+        viewModel.assignRoomToGroupMutableState.value = ChatViewModel.AssignRoomToGroup(groupDetails, chatDetails)
+
+    }
+
+    viewModel.assignRoomToGroupMutableState.value?.let {
+        AlertDialog(title = {
+            Log.d("adasdas", "ChatGroupAndListingMain: ${it.roomDetails.clusterGroupId}")
+            val title: String = if (it.roomDetails.clusterGroupId != "None") {
+                    "Reassign group?"
+
+            } else
+                "Assign Room To Group"
+
+            Text(text = title)
+
+        }, dismissButton = {
+            Button(onClick = { viewModel.assignRoomToGroupMutableState.value = null }) {
+                Text(text = "Cancel")
+            }
+        }, onDismissRequest = { }, confirmButton = {
+            Button(onClick = {
+                viewModel.assignRoomToSelectedGroup(it.groupDetails.clusterGroupId!!.toInt(), it.roomDetails.roomID!!)
+                viewModel.assignRoomToGroupMutableState.value = null
+            }) {
+                Text(text = "Confirm")
+            }
+        }, text = {
+            val title: String = if (it.roomDetails.clusterGroupId != "None") {
+                val count = viewModel.state.value.groupDetailsList.clusterRoomGroups.filter { listItem ->
+                    listItem.clusterGroupId == it.roomDetails.clusterGroupId
+                }.size
+                if ((count - 1) == 0)
+                    "Group will be deleted ..Reassign room?"
+                else
+                    "Reassign group?"
+
+            } else
+                "Assign Room To Group"
+
+            Text(text = title)
+
+
+        }
+        )
+
+    }
     LongPressDraggable(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier
                 .fillMaxSize()
@@ -79,7 +130,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirect
                 horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 items(items = viewModel.state.value.groupDetailsList.clusterRoomGroups)
                 {
-                    GroupItemDetail(groupDetails = it, retrieveChatOfGroup)
+                    GroupItemDetail(groupDetails = it, retrieveChatOfGroup, displayRoomToGroup)
                 }
 
             }
@@ -87,7 +138,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirect
                 Row {
                     Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = "back", modifier = Modifier.clickable {
                         selectedGroupName.value = null
-                        retrieveChatOfGroup.invoke(-1,null)
+                        retrieveChatOfGroup.invoke(-1, null)
                     })
                     Text(text = it, fontSize = 20.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 10.dp))
                 }
@@ -122,25 +173,40 @@ fun retrieveChatListBasedOnGroup(viewModel: ChatViewModel, groupId: Int) {
 @Preview
 @Composable
 fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),
-    getChatListOfGroupId: (Int, String?) -> Unit = { a, b -> }) {
+    getChatListOfGroupId: (Int, String?) -> Unit = { a, b -> },
+    displayRoomToGroup: @Composable (ChatRoomWithTotalMessage, ChatRoomWithTotalMessage) -> Unit = { a, b -> }) {
     val chatToGroupList = remember {
         mutableStateMapOf<Int, Int>()
     }
+
+
     DropTarget<ChatRoomWithTotalMessage>(modifier = Modifier.padding(6.dp)) { isInBound, chatGroupItem ->
         val bgColor = if (isInBound) Color.Red else Color.White
 
+
         chatGroupItem?.let {
-            if (isInBound) chatToGroupList[chatGroupItem.roomID!!] = chatGroupItem.roomID!!
+            if (isInBound) {
+                chatToGroupList[chatGroupItem.roomID!!] = chatGroupItem.roomID!!
+                Log.d("asdasd", "ccc")
+
+                displayRoomToGroup.invoke(groupDetails, it)
+
+            }
+
+
         }
+
+
         val groupName = groupDetails.roomName
         Card(modifier = Modifier.clickable {
-            getChatListOfGroupId.invoke(groupDetails.clusterGroupId.toInt(), groupName)
+            getChatListOfGroupId.invoke(groupDetails.clusterGroupId!!.toInt(), groupName)
         }) {
             Column(modifier = Modifier
                     .background(bgColor)
                     .fillMaxWidth()
                     .padding(10.dp)) {
                 if (chatToGroupList.isNotEmpty()) {
+
                     Text(text = groupName, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.ExtraBold)
                     Text(text = "${chatToGroupList.size} Items", fontSize = 14.sp, color = Color.Black)
                 } else Text(text = groupName, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.ExtraBold)
@@ -148,6 +214,7 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
         }
 
     }
+
 }
 
 @Preview

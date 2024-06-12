@@ -1,6 +1,7 @@
 package com.example.chatapplication.android.chat
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.chatapplication.Greeting
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
 import com.example.chatapplication.ApiConfig.websocketConfig.Resource
+import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
+import com.example.chatapplication.ApiHandler
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
@@ -27,19 +30,23 @@ class ChatViewModel : ViewModel() {
 
     private val _toastEvent = MutableSharedFlow<String>()
     val toastEvent = _toastEvent.asSharedFlow()
-    var groupListed=false
 
-    fun initSessionForGroupListing(groupId:String,onConnected:(()->Unit)?=null)
-    {
+    data class AssignRoomToGroup(var groupDetails: ChatRoomWithTotalMessage , var roomDetails: ChatRoomWithTotalMessage )
 
-        initSession(groupId,false,onConnected)
+    var assignRoomToGroupMutableState :MutableState<AssignRoomToGroup?> = mutableStateOf(null)
+
+
+
+    fun initSessionForGroupListing(groupId: String, onConnected: (() -> Unit)? = null) {
+
+        initSession(groupId, false, onConnected)
     }
-    fun initSessionForChatRoom(roomId: String,onConnected:(()->Unit)?=null)
-    {
-        initSession(roomId,true,onConnected)
+
+    fun initSessionForChatRoom(roomId: String, onConnected: (() -> Unit)? = null) {
+        initSession(roomId, true, onConnected)
     }
 
-   private fun initSession(roomId: String,isForChat:Boolean=true,onConnected:(()->Unit)?) {
+    private fun initSession(roomId: String, isForChat: Boolean = true, onConnected: (() -> Unit)?) {
         this.chatSocketService = Greeting().provideChatSocketService()
         viewModelScope.launch {
             val result = chatSocketService.initSession(roomId = roomId)
@@ -47,18 +54,15 @@ class ChatViewModel : ViewModel() {
             when (result) {
                 is Resource.Success -> {
                     onConnected?.invoke()
-                    if (isForChat)
-                    {
+                    if (isForChat) {
                         chatSocketService.observeMessages().onEach { message ->
 
-                                val newList = state.value.messages.toMutableList().apply {
-                                    add(0, message)
-                                }
-                                _state.value = state.value.copy(messages = newList)
-                            }.launchIn(viewModelScope)
-                    }
-                    else
-                    {
+                            val newList = state.value.messages.toMutableList().apply {
+                                add(0, message)
+                            }
+                            _state.value = state.value.copy(messages = newList)
+                        }.launchIn(viewModelScope)
+                    } else {
                         chatSocketService.observeGroupList().onEach { message ->
                             Log.d("awheghhqw", "initSession: $message")
 
@@ -87,10 +91,10 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    fun sendMessage(message:String) {
+    fun sendMessage(message: String) {
         viewModelScope.launch {
-                chatSocketService.sendMessage(message)
-                _messageText.value=""
+            chatSocketService.sendMessage(message)
+            _messageText.value = ""
 
         }
     }
@@ -99,5 +103,14 @@ class ChatViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         disconnect()
+    }
+
+    fun assignRoomToSelectedGroup(groupId: Int, roomID: Int,userOverride:Boolean=true) {
+      viewModelScope.launch {
+          ApiHandler().assignRoomToSelectedGroup(roomID,groupId,userOverride, onResultObtained = {
+              isSuccess,result->
+              Log.d("asdasdasd", "assignRoomToSelectedGroup: $isSuccess , $result")
+          })
+      }
     }
 }
