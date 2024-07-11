@@ -34,8 +34,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.datastore.core.DataStore
 import com.example.chatapplication.ApiConfig.UserAuthenticationResponse
 import com.example.chatapplication.ApiResponseObtained
+import com.example.chatapplication.cacheConfig.CacheManager
+import com.example.chatapplication.cacheConfig.createDataStore
 
 interface onNavigate
 {
@@ -48,6 +51,8 @@ fun UserAuthenticationFullPage(authenticateViewModel: AuthenticationViewModel = 
 {
 
     val context = LocalContext.current
+
+
 
     ConstraintLayout(modifier = Modifier.fillMaxSize().imePadding()) {
         val (userDetailsFieldsRef, buttonRef, newAccountRef) = createRefs()
@@ -164,9 +169,12 @@ fun createNewUser(context: Context, authenticateViewModel: AuthenticationViewMod
 
 }
 
+
 fun validateUser(context: Context, authenticateViewModel: AuthenticationViewModel, onNavigate: onNavigate?, username: String,
     password: String)
 {
+
+
     authenticateViewModel.verifyUserDetails(username, password, object : ApiResponseObtained
     {
         override fun onResponseObtained(isSuccess: Boolean, response: Any?)
@@ -174,6 +182,9 @@ fun validateUser(context: Context, authenticateViewModel: AuthenticationViewMode
             Log.d("asdasdwe", "verifyUserDetails: asdasd $isSuccess   ... $response")
             if (isSuccess)
             {
+                val cacheManager = CacheManager.getManger(context)
+                authenticateViewModel.saveUserNameToCache(cacheManager, username)
+
                onNavigate?.onTaskPerformed("complete")
             }
             else
@@ -186,5 +197,9 @@ fun validateUser(context: Context, authenticateViewModel: AuthenticationViewMode
             }
         }
 
+
     })
+
 }
+
+

@@ -25,6 +25,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -42,7 +44,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 
 @Composable
-fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int,roomName:String)
+fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName: String)
 {
 
 
@@ -59,7 +61,11 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int,roomName:S
 
         val observer = LifecycleEventObserver() { _, event ->
             Log.d("awhew", "cccc : $event")
-            if (event == Lifecycle.Event.ON_START) viewModel.initSessionForChatRoom("/$roomId/")
+            if (event == Lifecycle.Event.ON_START) viewModel.initSessionForChatRoom("/$roomId/", onConnected = {
+                val sendMessage =
+                    ChatMessageRequest(command = "join", user = userName, message = "", blocked_user = emptyList(), pageNumber = 0)
+                viewModel.sendMessage(Gson().toJson(sendMessage))
+            })
             else if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
         }
         lifeCycleOwner.lifecycle.addObserver(observer)
@@ -69,38 +75,40 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int,roomName:S
 
     }
     val state = viewModel.state.value
-    Column(modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp))
+
+    Column(modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp))
 
     {
 
-        Text(text =roomName )
-        LazyColumn(modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(), reverseLayout = true) {
+        Text(text = roomName)
+        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth(), reverseLayout = true) {
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
+
             items(items = state.messages) { message ->
-                val isOwnMessage = message.user == userName
-                Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
-                    modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier
-                            .width(200.dp)
-                            .padding(10.dp)
-                            .drawBehind {
+
+
+                message.prevMessages?.forEach { prevMessage ->
+                    if (prevMessage.message.isNotEmpty())
+                    {
+                        val isOwnMessage = prevMessage.user == userName
+                        Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
+                            modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.width(200.dp).padding(10.dp).drawBehind {
                                 val cornerRadius = 10.dp.toPx()
                                 val triangleHeight = 20.dp.toPx()
                                 val triangleWidth = 25.dp.toPx()
                                 val trianglePath = Path().apply {
-                                    if (isOwnMessage) {
+                                    if (isOwnMessage)
+                                    {
                                         moveTo(size.width, size.height - cornerRadius)
                                         lineTo(size.width, size.height + triangleHeight)
                                         lineTo(size.width - triangleWidth, size.height - cornerRadius)
                                         close()
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         moveTo(0f, size.height - cornerRadius)
                                         lineTo(0f, size.height + triangleHeight)
                                         lineTo(triangleWidth, size.height - cornerRadius)
@@ -110,12 +118,50 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int,roomName:S
                                 }
                                 drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.LightGray)
 
-                            }
-                            .background(color = if (isOwnMessage) Color.Green else Color.LightGray, shape = RoundedCornerShape(10.dp))
-                            .padding(8.dp)) {
-                        Text(text = message.user, fontWeight = FontWeight.Bold)
-                        Text(text = message.message)
+                            }.background(color = if (isOwnMessage) Color.Green else Color.LightGray, shape = RoundedCornerShape(10.dp))
+                                .padding(8.dp)) {
+                                Text(text = prevMessage.user, fontWeight = FontWeight.Bold)
+                                Text(text = prevMessage.message)
+                                Log.d("aswoeiqwe", "ChatScreen: ${prevMessage.message}")
 
+                            }
+                        }
+                    }
+                }
+                if (message.message.isNotEmpty())
+                {
+                    val isOwnMessage = message.user == userName
+                    Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
+                        modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.width(200.dp).padding(10.dp).drawBehind {
+                            val cornerRadius = 10.dp.toPx()
+                            val triangleHeight = 20.dp.toPx()
+                            val triangleWidth = 25.dp.toPx()
+                            val trianglePath = Path().apply {
+                                if (isOwnMessage)
+                                {
+                                    moveTo(size.width, size.height - cornerRadius)
+                                    lineTo(size.width, size.height + triangleHeight)
+                                    lineTo(size.width - triangleWidth, size.height - cornerRadius)
+                                    close()
+                                }
+                                else
+                                {
+                                    moveTo(0f, size.height - cornerRadius)
+                                    lineTo(0f, size.height + triangleHeight)
+                                    lineTo(triangleWidth, size.height - cornerRadius)
+                                    close()
+                                }
+
+                            }
+                            drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.LightGray)
+
+                        }.background(color = if (isOwnMessage) Color.Green else Color.LightGray, shape = RoundedCornerShape(10.dp))
+                            .padding(8.dp)) {
+                            Text(text = message.user, fontWeight = FontWeight.Bold)
+                            Text(text = message.message)
+                            Log.d("aswoeiqwe", "ChatScreen: ${message.message}")
+                        }
                     }
                 }
             }
@@ -133,7 +179,7 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel,roomId: Int,roomName:S
 
                 if (viewModel.messageText.value.isNotEmpty())
                 {
-                    val sendMessage = ChatMessageRequest(command = "content", user = "ccc@ccc.com", message = viewModel.messageText.value,
+                    val sendMessage = ChatMessageRequest(command = "content", user = userName, message = viewModel.messageText.value,
                         blocked_user = emptyList(), pageNumber = 1)
                     viewModel.sendMessage(Gson().toJson(sendMessage))
                 }

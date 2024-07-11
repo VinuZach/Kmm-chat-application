@@ -1,6 +1,6 @@
 package com.example.chatapplication.ApiConfig
 
-const val HOST_NAME ="192.168.1.35:8000"
+const val HOST_NAME ="192.168.1.39:8000"
 
 const val BASE_URL = "http://$HOST_NAME/chatApp"
 sealed class HttpEndPoints(val url: String) {

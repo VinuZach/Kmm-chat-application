@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +21,7 @@ import com.example.chatapplication.android.Authentication.ui.theme.ChatApplicati
 import com.example.chatapplication.android.chat.ChatGroupAndListingMain
 import com.example.chatapplication.android.chat.ChatScreen
 import com.example.chatapplication.android.chat.ChatViewModel
+import com.example.chatapplication.cacheConfig.CacheManager
 import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity()
@@ -36,25 +39,33 @@ class MainActivity : ComponentActivity()
             }
         }
     }
+
     @Preview
     @Composable
     fun MainPage()
     {
-
+        val userName = remember {
+            mutableStateOf("")
+        }
         val chatViewModel: ChatViewModel = viewModel()
         val navController = rememberNavController()
+        val userNameFlow = chatViewModel.retrieveUserNameFromCache(CacheManager.getManger(applicationContext))
+        userNameFlow.invokeOnCompletion {
+            userNameFlow.getCompleted()?.let {
+                userName.value = it
+            }
+        }
         NavHost(navController = navController, startDestination = "group_and_chat_listing") {
 
             composable<NavigationChatRoomId> {
-                val chatRoomId=it.toRoute<NavigationChatRoomId>()
+                val chatRoomId = it.toRoute<NavigationChatRoomId>()
                 Log.d("asasdsadsad", "directChat: ")
-                ChatScreen(userName = "userName", viewModel = chatViewModel, roomId = chatRoomId.roomId, roomName = chatRoomId.roomName)
+                ChatScreen(userName = userName.value, viewModel = chatViewModel, roomId = chatRoomId.roomId, roomName = chatRoomId.roomName)
 
             }
-            composable("group_and_chat_listing")
-            {
-                ChatGroupAndListingMain(viewModel = chatViewModel){roomId,roomName->
-                    navController.navigate(NavigationChatRoomId(roomId,roomName))
+            composable("group_and_chat_listing") {
+                ChatGroupAndListingMain(viewModel = chatViewModel) { roomId, roomName ->
+                    navController.navigate(NavigationChatRoomId(roomId, roomName))
                 }
 
             }
@@ -64,5 +75,6 @@ class MainActivity : ComponentActivity()
     }
 
 }
+
 @Serializable
-data class NavigationChatRoomId(val roomId:Int,val roomName:String)
+data class NavigationChatRoomId(val roomId: Int, val roomName: String)
