@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.chatapplication.Greeting
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
 import com.example.chatapplication.ApiConfig.websocketConfig.Resource
+import com.example.chatapplication.ApiConfig.websocketConfig.USER_BLOCK_STRING_COMBO
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
 import com.example.chatapplication.ApiHandler
 import com.example.chatapplication.cacheConfig.USER_NAME
@@ -36,6 +37,9 @@ class ChatViewModel : ViewModel()
 
     private val _toastEvent = MutableSharedFlow<String>()
     val toastEvent = _toastEvent.asSharedFlow()
+
+   private val _showUsersInChat= mutableStateOf(false)
+    val showUsersInChat:State<Boolean> =_showUsersInChat
 
     data class AssignRoomToGroup(var groupDetails: ChatRoomWithTotalMessage, var roomDetails: ChatRoomWithTotalMessage)
 
@@ -69,28 +73,24 @@ class ChatViewModel : ViewModel()
                     {
                         chatSocketService.observeMessages().onEach { message ->
 
-                          if (message.message.trim().isEmpty())
-                          {
-                              if (state.value.messages.isNotEmpty())
-                              {
-                                  state.value.messages.first().prevMessages?.let {
-                                      existingPrevMessage->
-                                      if (existingPrevMessage.isNotEmpty())
-                                          _state.value = ChatState()
-                                  }
-                                  try
-                                  {
-                                      state.value.messages.last().prevMessages?.let {
-                                              existingPrevMessage->
-                                          if (existingPrevMessage.isNotEmpty())
-                                              _state.value = ChatState()
-                                      }
-                                  } catch (e: Exception)
-                                  {
-                                    e.printStackTrace()
-                                  }
-                              }
-                          }
+                            if (message.message.trim().isEmpty())
+                            {
+                                if (state.value.messages.isNotEmpty())
+                                {
+                                    state.value.messages.first().prevMessages?.let { existingPrevMessage ->
+                                        if (existingPrevMessage.isNotEmpty()) _state.value = ChatState()
+                                    }
+                                    try
+                                    {
+                                        state.value.messages.last().prevMessages?.let { existingPrevMessage ->
+                                            if (existingPrevMessage.isNotEmpty()) _state.value = ChatState()
+                                        }
+                                    } catch (e: Exception)
+                                    {
+                                        e.printStackTrace()
+                                    }
+                                }
+                            }
                             val newList = state.value.messages.toMutableList().apply {
 
                                 add(0, message)
@@ -123,6 +123,14 @@ class ChatViewModel : ViewModel()
     fun onMessageChange(message: String)
     {
         _messageText.value = message
+
+       val stringToCheck= USER_BLOCK_STRING_COMBO
+        if (message.contains(stringToCheck)) viewModelScope.launch {
+            _showUsersInChat.value=true
+        }
+        else
+            _showUsersInChat.value=false
+
     }
 
     fun disconnect()
