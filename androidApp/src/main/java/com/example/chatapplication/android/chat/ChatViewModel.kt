@@ -8,12 +8,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.chatapplication.Greeting
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
 import com.example.chatapplication.ApiConfig.websocketConfig.Resource
-import com.example.chatapplication.ApiConfig.websocketConfig.USER_BLOCK_STRING_COMBO
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
 import com.example.chatapplication.ApiHandler
+import com.example.chatapplication.Greeting
 import com.example.chatapplication.cacheConfig.USER_NAME
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -46,6 +45,10 @@ class ChatViewModel : ViewModel()
     var assignRoomToGroupMutableState: MutableState<AssignRoomToGroup?> = mutableStateOf(null)
 
 
+    fun showUsersInChat(showUsers:Boolean)
+    {
+        _showUsersInChat.value=showUsers
+    }
     fun initSessionForGroupListing(groupId: String, onConnected: (() -> Unit)? = null)
     {
 
@@ -123,14 +126,6 @@ class ChatViewModel : ViewModel()
     fun onMessageChange(message: String)
     {
         _messageText.value = message
-
-       val stringToCheck= USER_BLOCK_STRING_COMBO
-        if (message.contains(stringToCheck)) viewModelScope.launch {
-            _showUsersInChat.value=true
-        }
-        else
-            _showUsersInChat.value=false
-
     }
 
     fun disconnect()
