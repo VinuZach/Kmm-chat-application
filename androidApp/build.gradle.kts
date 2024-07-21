@@ -66,5 +66,6 @@ dependencies {
     implementation (libs.androidx.compose.icons)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.androidx.datastore.preferences)
 
 }

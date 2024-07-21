@@ -36,6 +36,8 @@ kotlin {
             implementation(libs.ktor.client.negotiator)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.androidx.datastore.preferences)
+
 
             implementation (libs.kotlinx.serialization.json)
         }
@@ -44,10 +46,12 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
-            
+            implementation(libs.androidx.datastore.preferences)
+
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.androidx.datastore.preferences)
         }
     }
 }
