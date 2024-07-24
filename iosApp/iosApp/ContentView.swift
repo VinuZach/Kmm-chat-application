@@ -9,166 +9,131 @@ extension UTType
 
 struct ContentView: View {
     @ObservedObject private(set) var viewModel: ViewModel
-    @State var showDialog:Bool=false
- 
-    
-    var body: some View {
-        
-        NavigationStack(path:$viewModel.navigationPath)
-        {
-            groupListingView
-          
-            .navigationDestination(for: ChatRoomWithTotalMessage.self)
-            { destination in
-                
-               let _ = print(destination)
-               
-                VStack
-                {
-                    HStack
-                    {
-                        Text(destination.roomName)
-                    }
-                        List() {
-                        ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
-                            Text(messageItem.message)
-                                .padding(10)
-                                .rotationEffect(.radians(.pi))
-                                .scaleEffect(x: -1, y: 1, anchor: .center)
-                        }
-                    }.rotationEffect(.radians(.pi))
-                        .scaleEffect(x: -1, y: 1, anchor: .center)
-                    HStack
-                    {
-                        TextField("type message", text: $viewModel.sendMessageData)
-                            .keyboardType(.asciiCapable)
-                        Button("send")
-                        {
-                           
+    @State var showDialog: Bool = false
 
-                            let messageToSend=ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "aaa@aaa.com", pageNumber: 1, blocked_user: [String]())
-                            viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
+    var body: some View {
+        NavigationStack(path: $viewModel.navigationPath) {
+            groupListingView
+
+                .navigationDestination(for: ChatRoomWithTotalMessage.self) { destination in
+
+                   let  _ = print(destination)
+
+                    VStack {
+                        HStack {
+                            Text(destination.roomName)
                         }
-                    }.padding(.horizontal,30)
+                        List {
+                            ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
+                                Text(messageItem.message)
+                                    .padding(10)
+                                    .rotationEffect(.radians(.pi))
+                                    .scaleEffect(x: -1, y: 1, anchor: .center)
+                            }
+                        }.rotationEffect(.radians(.pi))
+                            .scaleEffect(x: -1, y: 1, anchor: .center)
+                        HStack {
+                            TextField("type message", text: $viewModel.sendMessageData)
+                                .keyboardType(.asciiCapable)
+                            Button("send") {
+                                let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "aaa@aaa.com", pageNumber: 1, blocked_user: [String]())
+                                viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
+                            }
+                        }.padding(.horizontal, 30)
+                    }
+                    .onAppear(perform: {
+                        viewModel.initChatRoomSocketConnection(roomId: destination.roomID!)
+                    })
                 }
-                .onAppear(perform: {
-                    viewModel.initChatRoomSocketConnection(roomId: destination.roomID!)
-                })
-            }
         }
-                  
- 
     }
-    
-  
-    
-    var groupListingView:some View
-    {
-     
-       
-        VStack
-        {
+
+    var groupListingView: some View {
+        VStack {
             let groupDetailsList = viewModel.groupListingWithChat?.clusterRoomGroups ?? [ChatRoomWithTotalMessage]()
-            
-            ScrollView() {
-                LazyHStack() {
-                     ForEach(groupDetailsList,id: \.clusterGroupId)
-                    {
+
+            ScrollView {
+                LazyHStack {
+                    ForEach(groupDetailsList, id: \.clusterGroupId) {
                         groupDetails in
                         Text(groupDetails.roomName)
                             .overlay(RoundedRectangle(cornerRadius: 5)
-                                        .stroke(.gray, lineWidth: 1))
+                                .stroke(.gray, lineWidth: 1))
                             .onTapGesture {
                                 viewModel.retrieveGroupDetails(groupDetails: groupDetails)
                             }
-                            .dropDestination(for:ChatItemDetails.self){ droppedRoomDetailList,location in
-                          
-                                viewModel.reassignRoomToGroup=ReassignRoomToGroup(selectedRoom: droppedRoomDetailList.first!, selectedGroup: groupDetails)
+                            .dropDestination(for: ChatItemDetails.self) { droppedRoomDetailList, location in
+
+                                viewModel.reassignRoomToGroup = ReassignRoomToGroup(selectedRoom: droppedRoomDetailList.first!, selectedGroup: groupDetails)
                                 print(groupDetails)
-                                showDialog=true
+                                showDialog = true
                                 return false
-                                
+
                             }.alert(isPresented: $showDialog, content: {
-                               
-                                var selectedRoom=viewModel.reassignRoomToGroup!.selectedRoom
-                                var selectedGroup=viewModel.reassignRoomToGroup!.selectedGroup
-                                let title = if((selectedRoom.clusterGroupId) != "None")
-                                {
-                                    "Reassign to "+selectedGroup.roomName
-                                } else
-                                {
-                                    "Assign room to "+selectedGroup.roomName
+                                let selectedRoom = viewModel.reassignRoomToGroup!.selectedRoom
+                                let selectedGroup = viewModel.reassignRoomToGroup!.selectedGroup
+                                let title = if (selectedRoom.clusterGroupId) != "None" {
+                                    "Reassign to " + selectedGroup.roomName
+                                } else {
+                                    "Assign room to " + selectedGroup.roomName
                                 }
-                                
-                                let message = if((selectedRoom.clusterGroupId) != "None")
-                                {
-                                    if(selectedGroup.roomCountUnderGroup-1 == 0)
-                                    {
+
+                                let message = if (selectedRoom.clusterGroupId) != "None" {
+                                    if selectedGroup.roomCountUnderGroup - 1 == 0 {
                                         "Group will be deleted ..Reassign room?"
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         "Reassign group?"
                                     }
-                                } else
-                                {
+                                } else {
                                     "Assign room to group"
                                 }
                                 return Alert(title: Text(title),
                                              message: Text(message),
-                                             primaryButton: .default(Text("Confirm"))
-                                             {
-                                  
-                                    viewModel.assignRoomToSelectedGroup(groupID: selectedGroup.clusterGroupId!,
-                                                                        roomId: Int32(selectedRoom.roomId))
-                                            viewModel.reassignRoomToGroup=nil
-                                            },
+                                             primaryButton: .default(Text("Confirm")) {
+                                                 viewModel.assignRoomToSelectedGroup(groupID: selectedGroup.clusterGroupId!,
+                                                                                     roomId: Int32(selectedRoom.roomId))
+                                                 viewModel.reassignRoomToGroup = nil
+                                             },
                                              secondaryButton: .cancel())
                             })
                     }
 
-                     .listStyle(.plain)
+                    .listStyle(.plain)
                 }
-              
-            }.frame(maxWidth:.infinity)
+
+            }.frame(maxWidth: .infinity)
                 .background(.red)
             let chatMessageList = viewModel.groupListingWithChat?.chatRoomWithTotalMessage ??
-            [ChatRoomWithTotalMessage]()
-            
-            if viewModel.selectedRoomGroup != nil
-            {
-                ZStack
-                {
-                    HStack{
+                [ChatRoomWithTotalMessage]()
+
+            if viewModel.selectedRoomGroup != nil {
+                ZStack {
+                    HStack {
                         Image(systemName: "chevron.backward")
                             .onTapGesture {
                                 viewModel.retrieveGroupDetails(groupDetails: nil)
-                            }.padding(.horizontal,20)
+                            }.padding(.horizontal, 20)
                         Text(viewModel.selectedRoomGroup!.roomName)
                         Spacer()
                     }
-                    .padding(.vertical,10)
-                    
+                    .padding(.vertical, 10)
                 }
             }
-            List(chatMessageList,id: \.roomID) {
+            List(chatMessageList, id: \.roomID) {
                 chatMessageDetails in
                 let chatDetails = ChatItemDetails(roomId: chatMessageDetails.roomID as! Int, roomName: chatMessageDetails.roomName, clusterGroupId: chatMessageDetails.clusterGroupId, totalMessage: chatMessageDetails.totalMessages, roomCountUnderGroup: chatMessageDetails.roomCountUnderGroup)
-                
+
                 Text(chatMessageDetails.roomName)
-                   
+
                     .onTapGesture {
                         viewModel.navigationPath.append(chatMessageDetails)
                     }.draggable(chatDetails)
-                    
             }
-            
         }
         .onAppear(perform: {
             print("group appear ")
             viewModel.initGroupListingSocketConnection()
         })
-        
     }
 }
 
@@ -176,29 +141,26 @@ struct ContentView: View {
     ContentView(viewModel: ContentView.ViewModel())
 }
 
-struct ReassignRoomToGroup
-{
-    var selectedRoom:ChatItemDetails
-    var selectedGroup:ChatRoomWithTotalMessage
-    
+struct ReassignRoomToGroup {
+    var selectedRoom: ChatItemDetails
+    var selectedGroup: ChatRoomWithTotalMessage
+
     init(selectedRoom: ChatItemDetails, selectedGroup: ChatRoomWithTotalMessage) {
         self.selectedRoom = selectedRoom
         self.selectedGroup = selectedGroup
     }
 }
 
-struct ChatItemDetails:Codable,Transferable{
-    let roomId:Int
-    let roomName:String
-    let clusterGroupId:String?
-    let totalMessage:Int32
-    let roomCountUnderGroup:Int32
-    
-    static var transferRepresentation: some TransferRepresentation
-    {
+struct ChatItemDetails: Codable, Transferable {
+    let roomId: Int
+    let roomName: String
+    let clusterGroupId: String?
+    let totalMessage: Int32
+    let roomCountUnderGroup: Int32
+
+    static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: .chatItemDetails)
     }
-
 }
 
 extension ContentView {

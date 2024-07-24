@@ -75,7 +75,7 @@ class ChatViewModel : ViewModel()
                     if (isForChat)
                     {
                         chatSocketService.observeMessages().onEach { message ->
-
+                            Log.d("1111", "initSession: $message", )
                             if (message.message.trim().isEmpty())
                             {
                                 if (state.value.messages.isNotEmpty())

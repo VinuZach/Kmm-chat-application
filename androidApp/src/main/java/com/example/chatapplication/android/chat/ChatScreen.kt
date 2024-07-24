@@ -49,16 +49,17 @@ import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatMessageRe
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
 
-var prevBlockedUsers: List<String?>? = mutableListOf()
+
 
 @Composable
-fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName: String)
-{
+fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName: String) {
 
     val blockedUsers = remember {
         mutableListOf<String>()
     }
-
+    val newMessageSend = remember {
+        mutableStateOf(false)
+    }
     val context = LocalContext.current
 
     LaunchedEffect(key1 = true) {
@@ -89,79 +90,98 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
     }
     val state = viewModel.state.value
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp))
+    Column(modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(16.dp))
 
     {
 
         Text(text = roomName)
 
 
-        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth(), reverseLayout = true) {
+        LazyColumn(modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(), reverseLayout = true) {
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
 
             items(items = state.messages) { message ->
-                val messageDisplay: @Composable (sendUserMessage: String, currentUser: String, message: String, blocked_user: List<String>?, displayBlockedUserSeperator: Boolean) -> Unit =
-                    { sendUserMessage, currentUser, message, blockedUserList, displayBlockedUserSeperator ->
+                val messageDisplay: @Composable (sendUserMessage: String, currentUser: String, message: String, blocked_user: List<String>?) -> Unit =
+                    { sendUserMessage, currentUser, message, blockedUserList ->
 
                         Column {
 
-                            blockedUserList?.let {
-                                if (displayBlockedUserSeperator) if (it.isNotEmpty())
-                                {
-
-                                    Spacer(modifier = Modifier.padding(10.dp))
-                                    Row(Modifier.fillMaxWidth()) {
-                                        val blockedUserText = if (it.size == 1) it.first()
-                                        else "${it.first()} and ${(it.size - 1)} others"
-                                        Text(text = "blocked for $blockedUserText", modifier = Modifier.fillMaxWidth(),
-                                            textAlign = TextAlign.Center)
-                                    }
-                                    Spacer(modifier = Modifier.padding(10.dp))
-                                }
-                                else
-                                {
-                                    Spacer(modifier = Modifier.padding(10.dp))
-                                    Row(Modifier.fillMaxWidth()) {
-
-                                        Text(text = "----------------------", modifier = Modifier.fillMaxWidth(),
-                                            textAlign = TextAlign.Center)
-                                    }
-                                    Spacer(modifier = Modifier.padding(10.dp))
-                                }
-                            }
+//                            blockedUserList?.let {
+//
+//                                if (displayBlockedUserSeperator) {
+//                                    if (it.isNotEmpty()) {
+//
+//                                        Spacer(modifier = Modifier.padding(10.dp))
+//                                        Row(Modifier.fillMaxWidth()) {
+//                                            val blockedUserText = if (it.size == 1) it.first()
+//                                            else "${it.first()} and ${(it.size - 1)} others"
+//                                            Text(text = "blocked for $blockedUserText", modifier = Modifier.fillMaxWidth(),
+//                                                textAlign = TextAlign.Center)
+//                                        }
+//                                        Spacer(modifier = Modifier.padding(10.dp))
+//                                    } else {
+//                                        Spacer(modifier = Modifier.padding(10.dp))
+//                                        Row(Modifier.fillMaxWidth()) {
+//
+//                                            Text(text = "----------------------", modifier = Modifier.fillMaxWidth(),
+//                                                textAlign = TextAlign.Center)
+//                                        }
+//                                        Spacer(modifier = Modifier.padding(10.dp))
+//                                    }
+//                                }
+//                            }
 
 
                             val isOwnMessage = sendUserMessage == currentUser
+
+                            var color=if (isOwnMessage) Color.Green else Color.LightGray
+
+                                blockedUserList?.let {
+                                if (it.isNotEmpty())
+                                    color= Color.Gray
+                            }
                             Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                                 modifier = Modifier.fillMaxWidth()) {
-                                Column(modifier = Modifier.width(200.dp).padding(10.dp).drawBehind {
-                                    val cornerRadius = 10.dp.toPx()
-                                    val triangleHeight = 20.dp.toPx()
-                                    val triangleWidth = 25.dp.toPx()
-                                    val trianglePath = Path().apply {
-                                        if (isOwnMessage)
-                                        {
-                                            moveTo(size.width, size.height - cornerRadius)
-                                            lineTo(size.width, size.height + triangleHeight)
-                                            lineTo(size.width - triangleWidth, size.height - cornerRadius)
-                                            close()
-                                        }
-                                        else
-                                        {
-                                            moveTo(0f, size.height - cornerRadius)
-                                            lineTo(0f, size.height + triangleHeight)
-                                            lineTo(triangleWidth, size.height - cornerRadius)
-                                            close()
-                                        }
+                                Column(modifier = Modifier
+                                        .width(200.dp)
+                                        .padding(10.dp)
+                                        .drawBehind {
+                                            val cornerRadius = 10.dp.toPx()
+                                            val triangleHeight = 20.dp.toPx()
+                                            val triangleWidth = 25.dp.toPx()
+                                            val trianglePath = Path().apply {
+                                                if (isOwnMessage) {
+                                                    moveTo(size.width, size.height - cornerRadius)
+                                                    lineTo(size.width, size.height + triangleHeight)
+                                                    lineTo(size.width - triangleWidth, size.height - cornerRadius)
+                                                    close()
+                                                } else {
+                                                    moveTo(0f, size.height - cornerRadius)
+                                                    lineTo(0f, size.height + triangleHeight)
+                                                    lineTo(triangleWidth, size.height - cornerRadius)
+                                                    close()
+                                                }
 
-                                    }
-                                    drawPath(path = trianglePath, color = if (isOwnMessage) Color.Green else Color.LightGray)
+                                            }
 
-                                }.background(color = if (isOwnMessage) Color.Green else Color.LightGray, shape = RoundedCornerShape(10.dp))
-                                    .padding(8.dp)) {
+
+
+
+                                            drawPath(path = trianglePath, color = color)
+
+
+                                        }
+                                        .background(color =color,
+                                            shape = RoundedCornerShape(10.dp))
+                                        .padding(8.dp)) {
                                     Text(text = sendUserMessage, fontWeight = FontWeight.Bold)
                                     Text(text = message)
 
@@ -170,40 +190,27 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
                             }
                         }
                     }
-                message.prevMessages?.forEachIndexed { index, prevMessage ->
 
-                    try
-                    {
-                        prevBlockedUsers = message.prevMessages!![index + 1].blocked_user
 
-                    } catch (e: IndexOutOfBoundsException)
+
+
+
+                message.prevMessages?.forEach { prevMessage ->
+                    if (prevMessage.message.isNotEmpty())
                     {
-                        e.printStackTrace()
+
+
+                        messageDisplay(prevMessage.user, userName, prevMessage.message, prevMessage.blocked_user, )
+
+
+
                     }
-                    val hideBlockedUserSeperator = prevMessage.blocked_user?.equals(prevBlockedUsers) ?: run { false }
-
-
-                    messageDisplay(prevMessage.user, userName, prevMessage.message, prevMessage.blocked_user, !hideBlockedUserSeperator)
-
-
                 }
+                if (message.message.isNotEmpty()) {
 
-//                message.prevMessages?.forEach { prevMessage ->
-//                    if (prevMessage.message.isNotEmpty())
-//                    {
-//
-//                        Log.d("3456456", "ChatScreen:PREV  ${prevMessage.message}  ${prevMessage.blocked_user}   $prevBlockedUsers")
-//                        messageDisplay(prevMessage.user, userName, prevMessage.message, prevMessage.blocked_user)
-//
-//                        prevBlockedUsers =  prevMessage.blocked_user
-//
-//                    }
-//                }
-                if (message.message.isNotEmpty())
-                {
-                    Log.d("3456456", "ChatScreen: ${message.message}   $prevBlockedUsers   ${message.blocked_user}")
-                    val hideBlockedUserSeperator = message.blocked_user?.equals(prevBlockedUsers) ?: run { false }
-                    messageDisplay(message.user, userName, message.message, message.blocked_user, !hideBlockedUserSeperator)
+
+                    messageDisplay(message.user, userName, message.message, message.blocked_user)
+                    Log.w("3456456", "Res   ", )
 
 
                 }
@@ -214,11 +221,9 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
         val messageText = remember {
             mutableStateOf(TextFieldValue())
         }
-        if (viewModel.showUsersInChat.value)
-        {
+        if (viewModel.showUsersInChat.value) {
             Log.e("asdsadsa", "ChatScreen: ${viewModel.state.value.messages}")
-            if (viewModel.state.value.messages.isNotEmpty())
-            {
+            if (viewModel.state.value.messages.isNotEmpty()) {
 
                 viewModel.state.value.messages.last().chat_room_user_list?.let { chatUserList ->
                     LazyRow {
@@ -232,7 +237,9 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
                             else isUserChecked.value = true
 
 
-                            Row(Modifier.padding(2.dp).border(1.dp, Color.Black, RectangleShape),
+                            Row(Modifier
+                                    .padding(2.dp)
+                                    .border(1.dp, Color.Black, RectangleShape),
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Checkbox(checked = isUserChecked.value, onCheckedChange = {
                                     if (!it) blockedUsers.add(user)
@@ -266,8 +273,7 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
 
             Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "send", modifier = Modifier.pointerInput(Unit) {
                 detectTapGestures(onTap = {
-                    if (viewModel.messageText.value.isNotEmpty())
-                    {
+                    if (viewModel.messageText.value.isNotEmpty()) {
 
                         val sendMessage = ChatMessageRequest(command = "content", user = userName, message = viewModel.messageText.value,
                             blocked_user = blockedUsers, pageNumber = 1)
@@ -276,14 +282,13 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
                         viewModel.onMessageChange("")
 
 
-                        prevBlockedUsers = blockedUsers
-                        Log.e("3456456", "ChatScreen: $prevBlockedUsers")
-                        blockedUsers.clear()
 
+
+                        blockedUsers.clear()
+                        newMessageSend.value = true
                         messageText.value = TextFieldValue(text = "")
                         viewModel.showUsersInChat(false)
-                    }
-                    else Toast.makeText(context, "enter text", Toast.LENGTH_SHORT).show()
+                    } else Toast.makeText(context, "enter text", Toast.LENGTH_SHORT).show()
 
                 }, onLongPress = {
 
