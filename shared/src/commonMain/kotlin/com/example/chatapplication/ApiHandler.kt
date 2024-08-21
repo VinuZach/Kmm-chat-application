@@ -2,6 +2,7 @@ package com.example.chatapplication
 
 import com.example.chatapplication.ApiConfig.model.BaseResponse
 import com.example.chatapplication.ApiConfig.HttpEndPoints
+import com.example.chatapplication.ApiConfig.model.ChatCreationOrUpdate
 import com.example.chatapplication.ApiConfig.model.NewUserRegistrationRequest
 import com.example.chatapplication.ApiConfig.model.NewUserRegistrationResponse
 import com.example.chatapplication.ApiConfig.model.UserAuthenticationResponse
@@ -86,7 +87,7 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
         }
 
         if (httpResponse?.status == HttpStatusCode.OK || httpResponse?.status == HttpStatusCode.Unauthorized) result =
-            UsersEmailsResponse(true,httpResponse.body<List<String>>())
+            UsersEmailsResponse(true, httpResponse.body<List<String>>())
 
         CoroutineScope(Dispatchers.Main).launch {
             onResultObtained.invoke(result.success, result)
@@ -94,25 +95,49 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
     }
 
 
-suspend fun createNewUser(userName: String, password: String, email: String, onResultObtained: (Boolean, Any) -> Unit) {
-    var result = NewUserRegistrationResponse(success = false, message = "Server response not obtained")
-    val httpResponse: HttpResponse? = try {
-        apiCallManager.request {
-            contentType(ContentType.Application.Json)
-            url(HttpEndPoints.RegisterNewUser.url)
-            method = HttpMethod.Post
-            setBody(NewUserRegistrationRequest(userName, password, email))
+    suspend fun createNewUser(userName: String, password: String, email: String, onResultObtained: (Boolean, Any) -> Unit) {
+        var result = NewUserRegistrationResponse(success = false, message = "Server response not obtained")
+        val httpResponse: HttpResponse? = try {
+            apiCallManager.request {
+                contentType(ContentType.Application.Json)
+                url(HttpEndPoints.RegisterNewUser.url)
+                method = HttpMethod.Post
+                setBody(NewUserRegistrationRequest(userName, password, email))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
+
+        if (httpResponse?.status == HttpStatusCode.OK || httpResponse?.status == HttpStatusCode.Unauthorized) result =
+            httpResponse.body<NewUserRegistrationResponse>()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            onResultObtained.invoke(result.success, result)
+        }
     }
 
-    if (httpResponse?.status == HttpStatusCode.OK || httpResponse?.status == HttpStatusCode.Unauthorized) result =
-        httpResponse.body<NewUserRegistrationResponse>()
 
-    CoroutineScope(Dispatchers.Main).launch {
-        onResultObtained.invoke(result.success, result)
+  suspend  fun createOrUpdateChat(roomName: String, roomId: Int?,selectedUserForChat: List<String>,onResultObtained:(Boolean, Any) -> Unit): Unit {
+        var result = BaseResponse(success = false, message = "Server response not obtained")
+        val httpResponse: HttpResponse? = try {
+
+            apiCallManager.request {
+                contentType(ContentType.Application.Json)
+                url(HttpEndPoints.createOrUpdateChat.url)
+                method = HttpMethod.Post
+
+                setBody(ChatCreationOrUpdate(roomName,null,selectedUserForChat))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+        if (httpResponse?.status == HttpStatusCode.OK || httpResponse?.status == HttpStatusCode.Unauthorized)
+            result = httpResponse.body<BaseResponse>()
+        CoroutineScope(Dispatchers.Main).launch {
+            onResultObtained.invoke(result.success, result)
+        }
+
     }
-}
 }

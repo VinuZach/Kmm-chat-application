@@ -8,7 +8,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.chatapplication.ApiConfig.model.UsersEmailsResponse
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
 import com.example.chatapplication.ApiConfig.websocketConfig.Resource
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
@@ -168,19 +167,23 @@ class ChatViewModel : ViewModel()
         cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
     }
 
-    fun retrieveUserEmailList() {
+    fun retrieveUserEmailList(onResultObtained: (Boolean, Any) -> Unit) {
         viewModelScope.launch {
             apiHandler.retrieveAllUserEmails(object : (Boolean, Any) -> Unit {
                 override fun invoke(p1: Boolean, p2: Any) {
                     Log.d("asdsad", "invoke: $p1")
-                    if (p1)
-                    {
-                        val userEmailList=p2 as UsersEmailsResponse
-                        Log.d("asdsad", "invoke: $userEmailList")
-                    }
+                    onResultObtained.invoke(p1,p2)
+
                 }
 
             })
         }
+    }
+
+    fun createOrUpdateChat(roomName: String,roomID: Int?, selectedUserForChat: List<String>,onResultObtained: (Boolean, Any) -> Unit) {
+        viewModelScope.launch {
+            apiHandler.createOrUpdateChat(roomName,roomID, selectedUserForChat,onResultObtained)
+        }
+
     }
 }

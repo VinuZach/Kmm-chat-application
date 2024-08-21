@@ -21,6 +21,7 @@ import com.example.chatapplication.android.Authentication.ui.theme.ChatApplicati
 import com.example.chatapplication.android.chat.ChatGroupAndListingMain
 import com.example.chatapplication.android.chat.ChatScreen
 import com.example.chatapplication.android.chat.ChatViewModel
+import com.example.chatapplication.android.chat.RoomCreationOrUpdate
 import com.example.chatapplication.cacheConfig.CacheManager
 import kotlinx.serialization.Serializable
 
@@ -66,10 +67,14 @@ class MainActivity : ComponentActivity() {
                 }, redirectToRoomDetails = {
                     navController.navigate("room_details_page")
                 }, createNewChat =
-                {
-                    navController.navigate("room_details_page")
+                {       roomId,roomName->
+                    navController.navigate(ChatCreationUpdate(roomId,roomName))
                 })
 
+            }
+            composable<ChatCreationUpdate> {
+                val ChatCreationUpdate = it.toRoute<ChatCreationUpdate>()
+                RoomCreationOrUpdate(ChatCreationUpdate,chatViewModel )
             }
 
 
@@ -82,4 +87,4 @@ class MainActivity : ComponentActivity() {
 data class NavigationChatRoomId(val roomId: Int, val roomName: String)
 
 @Serializable
-data class ChatCreationUpdate(val roomId: Int?, val roomName: String?)
+data class ChatCreationUpdate(val roomId: Int=-1, val roomName: String?)

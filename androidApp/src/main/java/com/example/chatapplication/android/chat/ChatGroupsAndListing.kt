@@ -49,7 +49,7 @@ import com.google.gson.Gson
 @Composable
 fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirectToRoomById: (Int, String) -> Unit = { a, b -> },
     redirectToRoomDetails: (Int?) -> Unit = { a -> },
-    createNewChat:(Int?)->Unit ={a -> }) {
+    createNewChat:(Int,String?)->Unit ={a,b -> }) {
 
     Scaffold(content = { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
@@ -162,7 +162,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirect
                                 .border(2.dp, Color.Black, RectangleShape)
                                 .padding(10.dp)
                                 .clickable {
-                                    createNewChat.invoke(null)
+                                    createNewChat.invoke(-1,null)
 
                                 },
                         textAlign = TextAlign.Center,
