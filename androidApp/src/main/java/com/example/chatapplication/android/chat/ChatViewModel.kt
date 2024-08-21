@@ -8,6 +8,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatapplication.ApiConfig.model.UsersEmailsResponse
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
 import com.example.chatapplication.ApiConfig.websocketConfig.Resource
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
@@ -44,6 +45,9 @@ class ChatViewModel : ViewModel()
 
     var assignRoomToGroupMutableState: MutableState<AssignRoomToGroup?> = mutableStateOf(null)
 
+    val apiHandler by lazy {
+        ApiHandler()
+    }
 
     fun showUsersInChat(showUsers:Boolean)
     {
@@ -154,7 +158,7 @@ class ChatViewModel : ViewModel()
     fun assignRoomToSelectedGroup(groupId: Int, roomID: Int, userOverride: Boolean = true)
     {
         viewModelScope.launch {
-            ApiHandler().assignRoomToSelectedGroup(roomID, groupId, userOverride, onResultObtained = { isSuccess, result ->
+            apiHandler.assignRoomToSelectedGroup(roomID, groupId, userOverride, onResultObtained = { isSuccess, result ->
                 Log.d("asdasdasd", "assignRoomToSelectedGroup: $isSuccess , $result")
             })
         }
@@ -162,5 +166,21 @@ class ChatViewModel : ViewModel()
 
     fun retrieveUserNameFromCache(cacheManager: DataStore<Preferences>) = viewModelScope.async {
         cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
+    }
+
+    fun retrieveUserEmailList() {
+        viewModelScope.launch {
+            apiHandler.retrieveAllUserEmails(object : (Boolean, Any) -> Unit {
+                override fun invoke(p1: Boolean, p2: Any) {
+                    Log.d("asdsad", "invoke: $p1")
+                    if (p1)
+                    {
+                        val userEmailList=p2 as UsersEmailsResponse
+                        Log.d("asdsad", "invoke: $userEmailList")
+                    }
+                }
+
+            })
+        }
     }
 }

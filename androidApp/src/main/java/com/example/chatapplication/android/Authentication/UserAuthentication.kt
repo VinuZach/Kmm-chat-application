@@ -34,11 +34,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.datastore.core.DataStore
-import com.example.chatapplication.ApiConfig.UserAuthenticationResponse
+import com.example.chatapplication.ApiConfig.model.UserAuthenticationResponse
 import com.example.chatapplication.ApiResponseObtained
 import com.example.chatapplication.cacheConfig.CacheManager
-import com.example.chatapplication.cacheConfig.createDataStore
 
 interface onNavigate
 {

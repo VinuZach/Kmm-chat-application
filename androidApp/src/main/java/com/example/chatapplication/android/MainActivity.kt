@@ -24,11 +24,9 @@ import com.example.chatapplication.android.chat.ChatViewModel
 import com.example.chatapplication.cacheConfig.CacheManager
 import kotlinx.serialization.Serializable
 
-class MainActivity : ComponentActivity()
-{
+class MainActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?)
-    {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
@@ -42,8 +40,7 @@ class MainActivity : ComponentActivity()
 
     @Preview
     @Composable
-    fun MainPage()
-    {
+    fun MainPage() {
         val userName = remember {
             mutableStateOf("")
         }
@@ -64,9 +61,14 @@ class MainActivity : ComponentActivity()
 
             }
             composable("group_and_chat_listing") {
-                ChatGroupAndListingMain(viewModel = chatViewModel) { roomId, roomName ->
+                ChatGroupAndListingMain(viewModel = chatViewModel, redirectToRoomById = { roomId, roomName ->
                     navController.navigate(NavigationChatRoomId(roomId, roomName))
-                }
+                }, redirectToRoomDetails = {
+                    navController.navigate("room_details_page")
+                }, createNewChat =
+                {
+                    navController.navigate("room_details_page")
+                })
 
             }
 
@@ -78,3 +80,6 @@ class MainActivity : ComponentActivity()
 
 @Serializable
 data class NavigationChatRoomId(val roomId: Int, val roomName: String)
+
+@Serializable
+data class ChatCreationUpdate(val roomId: Int?, val roomName: String?)

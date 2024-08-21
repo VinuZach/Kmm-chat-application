@@ -41,14 +41,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatMessageRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
-
 
 
 @Composable
@@ -142,11 +140,11 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
 
                             val isOwnMessage = sendUserMessage == currentUser
 
-                            var color=if (isOwnMessage) Color.Green else Color.LightGray
+                            var color = if (isOwnMessage) Color.Green else Color.LightGray
 
-                                blockedUserList?.let {
+                            blockedUserList?.let {
                                 if (it.isNotEmpty())
-                                    color= Color.Gray
+                                    color = Color.Gray
                             }
                             Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                                 modifier = Modifier.fillMaxWidth()) {
@@ -179,7 +177,7 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
 
 
                                         }
-                                        .background(color =color,
+                                        .background(color = color,
                                             shape = RoundedCornerShape(10.dp))
                                         .padding(8.dp)) {
                                     Text(text = sendUserMessage, fontWeight = FontWeight.Bold)
@@ -196,12 +194,10 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
 
 
                 message.prevMessages?.forEach { prevMessage ->
-                    if (prevMessage.message.isNotEmpty())
-                    {
+                    if (prevMessage.message.isNotEmpty()) {
 
 
-                        messageDisplay(prevMessage.user, userName, prevMessage.message, prevMessage.blocked_user, )
-
+                        messageDisplay(prevMessage.user, userName, prevMessage.message, prevMessage.blocked_user)
 
 
                     }
@@ -210,7 +206,7 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
 
 
                     messageDisplay(message.user, userName, message.message, message.blocked_user)
-                    Log.w("3456456", "Res   ", )
+                    Log.w("3456456", "Res   ")
 
 
                 }

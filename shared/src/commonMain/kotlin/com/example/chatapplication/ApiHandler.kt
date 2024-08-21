@@ -1,10 +1,11 @@
 package com.example.chatapplication
 
-import com.example.chatapplication.ApiConfig.BaseResponse
+import com.example.chatapplication.ApiConfig.model.BaseResponse
 import com.example.chatapplication.ApiConfig.HttpEndPoints
-import com.example.chatapplication.ApiConfig.NewUserRegistrationRequest
-import com.example.chatapplication.ApiConfig.NewUserRegistrationResponse
-import com.example.chatapplication.ApiConfig.UserAuthenticationResponse
+import com.example.chatapplication.ApiConfig.model.NewUserRegistrationRequest
+import com.example.chatapplication.ApiConfig.model.NewUserRegistrationResponse
+import com.example.chatapplication.ApiConfig.model.UserAuthenticationResponse
+import com.example.chatapplication.ApiConfig.model.UsersEmailsResponse
 import com.example.chatapplication.ApiConfig.websocketConfig.AssignRoomToGroupRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -24,20 +25,18 @@ import kotlinx.coroutines.launch
 class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
 
 
-    suspend fun assignRoomToSelectedGroup(roomId:Int,groupId:Int,userOverride:Boolean,onResultObtained: (Boolean, Any) -> Unit)
-    {
-        var result=BaseResponse(success = false, message = "Server response not obtained")
-        val httpResponse:HttpResponse?=try {
+    suspend fun assignRoomToSelectedGroup(roomId: Int, groupId: Int, userOverride: Boolean, onResultObtained: (Boolean, Any) -> Unit) {
+        var result = BaseResponse(success = false, message = "Server response not obtained")
+        val httpResponse: HttpResponse? = try {
 
-            apiCallManager.request{
+            apiCallManager.request {
                 contentType(ContentType.Application.Json)
                 url(HttpEndPoints.AssignRoomToSelectedGroup.url)
-                method= HttpMethod.Post
+                method = HttpMethod.Post
 
-                setBody(AssignRoomToGroupRequest(roomId,groupId,userOverride))
+                setBody(AssignRoomToGroupRequest(roomId, groupId, userOverride))
             }
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             e.printStackTrace()
             null
         }
@@ -47,6 +46,7 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
             onResultObtained.invoke(result.success, result)
         }
     }
+
     suspend fun verifyUserDetails(userName: String, password: String, onResultObtained: (Boolean, Any) -> Unit) {
         var result = UserAuthenticationResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
@@ -70,14 +70,15 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
 
     }
 
-    suspend fun createNewUser(userName: String, password: String, email: String, onResultObtained: (Boolean, Any) -> Unit) {
-        var result = NewUserRegistrationResponse(success = false, message = "Server response not obtained")
+    suspend fun retrieveAllUserEmails(onResultObtained: (Boolean, Any) -> Unit) {
+        var result = UsersEmailsResponse(false)
+
         val httpResponse: HttpResponse? = try {
             apiCallManager.request {
                 contentType(ContentType.Application.Json)
-                url(HttpEndPoints.RegisterNewUser.url)
+                url(HttpEndPoints.retrieveAllUsersEmail.url)
                 method = HttpMethod.Post
-                setBody(NewUserRegistrationRequest(userName, password, email))
+
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -85,10 +86,33 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
         }
 
         if (httpResponse?.status == HttpStatusCode.OK || httpResponse?.status == HttpStatusCode.Unauthorized) result =
-            httpResponse.body<NewUserRegistrationResponse>()
+            UsersEmailsResponse(true,httpResponse.body<List<String>>())
 
         CoroutineScope(Dispatchers.Main).launch {
             onResultObtained.invoke(result.success, result)
         }
     }
+
+
+suspend fun createNewUser(userName: String, password: String, email: String, onResultObtained: (Boolean, Any) -> Unit) {
+    var result = NewUserRegistrationResponse(success = false, message = "Server response not obtained")
+    val httpResponse: HttpResponse? = try {
+        apiCallManager.request {
+            contentType(ContentType.Application.Json)
+            url(HttpEndPoints.RegisterNewUser.url)
+            method = HttpMethod.Post
+            setBody(NewUserRegistrationRequest(userName, password, email))
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+
+    if (httpResponse?.status == HttpStatusCode.OK || httpResponse?.status == HttpStatusCode.Unauthorized) result =
+        httpResponse.body<NewUserRegistrationResponse>()
+
+    CoroutineScope(Dispatchers.Main).launch {
+        onResultObtained.invoke(result.success, result)
+    }
+}
 }

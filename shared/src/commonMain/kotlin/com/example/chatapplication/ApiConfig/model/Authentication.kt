@@ -1,4 +1,4 @@
-package com.example.chatapplication.ApiConfig
+package com.example.chatapplication.ApiConfig.model
 
 import kotlinx.serialization.Serializable
 
