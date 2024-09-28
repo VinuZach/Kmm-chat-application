@@ -17,7 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.example.chatapplication.android.Authentication.ui.theme.ChatApplicationTheme
+import com.example.chatapplication.android.theme.ChatApplicationTheme
 import com.example.chatapplication.android.chat.ChatGroupAndListingMain
 import com.example.chatapplication.android.chat.ChatScreen
 import com.example.chatapplication.android.chat.ChatViewModel

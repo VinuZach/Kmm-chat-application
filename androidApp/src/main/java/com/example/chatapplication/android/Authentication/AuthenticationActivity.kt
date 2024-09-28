@@ -31,7 +31,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.chatapplication.android.Authentication.ui.theme.ChatApplicationTheme
+import com.example.chatapplication.android.theme.ChatApplicationTheme
 import com.example.chatapplication.android.MainActivity
 import com.example.chatapplication.cacheConfig.CacheManager
 import com.example.chatapplication.cacheConfig.USER_NAME
@@ -59,14 +59,14 @@ class AuthenticationActivity : ComponentActivity()
                     LaunchedEffect(key1 = true) {
                         coroutineScope.launch {
 
-                            val cacheManager = CacheManager.getManger(context = context)
-                            val userNameFlow = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
-
-                          if (userNameFlow!=null)
-                          {
-                              finish()
-                              startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
-                          }
+//                            val cacheManager = CacheManager.getManger(context = context)
+//                            val userNameFlow = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
+//
+//                          if (userNameFlow!=null)
+//                          {
+//                              finish()
+//                              startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
+//                          }
                         }
                     }
 

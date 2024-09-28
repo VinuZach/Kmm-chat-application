@@ -77,7 +77,7 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
         val httpResponse: HttpResponse? = try {
             apiCallManager.request {
                 contentType(ContentType.Application.Json)
-                url(HttpEndPoints.retrieveAllUsersEmail.url)
+                url(HttpEndPoints.RetrieveAllUsersEmail.url)
                 method = HttpMethod.Post
 
             }
@@ -124,7 +124,7 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
 
             apiCallManager.request {
                 contentType(ContentType.Application.Json)
-                url(HttpEndPoints.createOrUpdateChat.url)
+                url(HttpEndPoints.CreateOrUpdateChat.url)
                 method = HttpMethod.Post
 
                 setBody(ChatCreationOrUpdate(roomName,null,selectedUserForChat))

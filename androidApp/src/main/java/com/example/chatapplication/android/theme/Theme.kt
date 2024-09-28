@@ -1,4 +1,4 @@
-package com.example.chatapplication.android.Authentication.ui.theme
+package com.example.chatapplication.android.theme
 
 import android.app.Activity
 import android.os.Build
@@ -15,12 +15,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(primary = Purple80, secondary = PurpleGrey80, tertiary = Pink80)
+private val DarkColorScheme = darkColorScheme(primary = Primary_Color, secondary = Secondary_Color, tertiary = Accent_Color
+    ,background = BackGround_color,surface = TextField_Background)
 
-private val LightColorScheme = lightColorScheme(primary = Purple40, secondary = PurpleGrey40, tertiary = Pink40
+private val LightColorScheme = lightColorScheme(primary = Primary_Color, secondary = Secondary_Color, tertiary = Accent_Color
+        ,background = BackGround_color, surface = TextField_Background
 
     /* Other default colors to override
-    background = Color(0xFFFFFBFE),
+
     surface = Color(0xFFFFFBFE),
     onPrimary = Color.White,
     onSecondary = Color.White,
@@ -36,11 +38,11 @@ fun ChatApplicationTheme(darkTheme: Boolean = isSystemInDarkTheme(),
 {
     val colorScheme = when
     {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-        {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
+//        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+//        {
+//            val context = LocalContext.current
+//            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+//        }
 
         darkTheme                                                      -> DarkColorScheme
         else                                                           -> LightColorScheme
