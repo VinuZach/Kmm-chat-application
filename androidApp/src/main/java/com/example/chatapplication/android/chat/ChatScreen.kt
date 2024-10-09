@@ -23,8 +23,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -32,9 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatMessageRequest
@@ -49,8 +50,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
 
 
-@Composable
-fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName: String) {
+@Composable fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName: String) {
 
     val blockedUsers = remember {
         mutableListOf<String>()
@@ -91,11 +91,16 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
     Column(modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(16.dp))
+    )
 
     {
 
-        Text(text = roomName)
+        Text(text = roomName, fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+            fontSize = MaterialTheme.typography.titleLarge.fontSize, color = Color.White,
+            modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(10.dp))
 
 
         LazyColumn(modifier = Modifier
@@ -140,51 +145,18 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
 
                             val isOwnMessage = sendUserMessage == currentUser
 
-                            var color = if (isOwnMessage) Color.Green else Color.LightGray
+                            val color = if (isOwnMessage) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
 
-                            blockedUserList?.let {
-                                if (it.isNotEmpty())
-                                    color = Color.Gray
-                            }
+
                             Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                                 modifier = Modifier.fillMaxWidth()) {
-                                Column(modifier = Modifier
-                                        .width(200.dp)
-                                        .padding(10.dp)
-                                        .drawBehind {
-                                            val cornerRadius = 10.dp.toPx()
-                                            val triangleHeight = 20.dp.toPx()
-                                            val triangleWidth = 25.dp.toPx()
-                                            val trianglePath = Path().apply {
-                                                if (isOwnMessage) {
-                                                    moveTo(size.width, size.height - cornerRadius)
-                                                    lineTo(size.width, size.height + triangleHeight)
-                                                    lineTo(size.width - triangleWidth, size.height - cornerRadius)
-                                                    close()
-                                                } else {
-                                                    moveTo(0f, size.height - cornerRadius)
-                                                    lineTo(0f, size.height + triangleHeight)
-                                                    lineTo(triangleWidth, size.height - cornerRadius)
-                                                    close()
-                                                }
 
-                                            }
-
-
-
-
-                                            drawPath(path = trianglePath, color = color)
-
-
-                                        }
-                                        .background(color = color,
-                                            shape = RoundedCornerShape(10.dp))
-                                        .padding(8.dp)) {
-                                    Text(text = sendUserMessage, fontWeight = FontWeight.Bold)
-                                    Text(text = message)
-
-
+                                blockedUserList?.let {
+                                    if (it.isNotEmpty()) {
+                                        ChatMessageView(MaterialTheme.colorScheme.tertiary, sendUserMessage, message, true)
+                                    }
                                 }
+                                ChatMessageView(color, sendUserMessage, message, false)
                             }
                         }
                     }
@@ -253,9 +225,12 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
         }
 
 
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+        Row(modifier = Modifier
+                .fillMaxWidth()
+                .background(color = MaterialTheme.colorScheme.surface),
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
-            TextField(value = messageText.value, onValueChange = {
+            TextField(modifier = Modifier.weight(0.85f), value = messageText.value, onValueChange = {
                 messageText.value = it
                 if (it.text.isEmpty()) blockedUsers.clear()
 
@@ -263,35 +238,93 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
 
             }, placeholder = {
                 Text(text = "Enter Message", modifier = Modifier.weight(1f))
-            })
+            }, colors = TextFieldDefaults.colors(unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedIndicatorColor =  MaterialTheme.colorScheme.surface,
+                focusedIndicatorColor =  MaterialTheme.colorScheme.surface,
+                focusedTextColor = MaterialTheme.colorScheme.secondary,
+                disabledTextColor = MaterialTheme.colorScheme.secondary,
+                unfocusedTextColor = MaterialTheme.colorScheme.secondary))
 
 
 
-            Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "send", modifier = Modifier.pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    if (viewModel.messageText.value.isNotEmpty()) {
+            Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "send", modifier = Modifier
+                    .weight(0.15f)
 
-                        val sendMessage = ChatMessageRequest(command = "content", user = userName, message = viewModel.messageText.value,
-                            blocked_user = blockedUsers, pageNumber = 1)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            if (viewModel.messageText.value.isNotEmpty()) {
 
-                        viewModel.sendMessage(Gson().toJson(sendMessage))
-                        viewModel.onMessageChange("")
+                                val sendMessage =
+                                    ChatMessageRequest(command = "content", user = userName, message = viewModel.messageText.value,
+                                        blocked_user = blockedUsers, pageNumber = 1)
+
+                                viewModel.sendMessage(Gson().toJson(sendMessage))
+                                viewModel.onMessageChange("")
 
 
 
 
-                        blockedUsers.clear()
-                        newMessageSend.value = true
-                        messageText.value = TextFieldValue(text = "")
-                        viewModel.showUsersInChat(false)
-                    } else Toast.makeText(context, "enter text", Toast.LENGTH_SHORT).show()
+                                blockedUsers.clear()
+                                newMessageSend.value = true
+                                messageText.value = TextFieldValue(text = "")
+                                viewModel.showUsersInChat(false)
+                            } else Toast
+                                    .makeText(context, "enter text", Toast.LENGTH_SHORT)
+                                    .show()
 
-                }, onLongPress = {
+                        }, onLongPress = {
 
-                    viewModel.showUsersInChat(true)
-                })
-            })
+                            viewModel.showUsersInChat(true)
+                        })
+                    })
 
         }
+    }
+}
+
+@Composable
+fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHighLightView: Boolean) {
+    val modifier = if (isHighLightView) Modifier.padding(end = 18.dp, bottom = 15.dp) else Modifier.padding(10.dp)
+    Column(modifier = modifier
+            .width(200.dp)
+
+//                                        .drawBehind {
+//                                            val cornerRadius = 10.dp.toPx()
+//                                            val triangleHeight = 20.dp.toPx()
+//                                            val triangleWidth = 25.dp.toPx()
+//                                            val trianglePath = Path().apply {
+//                                                if (isOwnMessage) {
+//                                                    moveTo(size.width, size.height - cornerRadius)
+//                                                    lineTo(size.width, size.height + triangleHeight)
+//                                                    lineTo(size.width - triangleWidth, size.height - cornerRadius)
+//                                                    close()
+//                                                } else {
+//                                                    moveTo(0f, size.height - cornerRadius)
+//                                                    lineTo(0f, size.height + triangleHeight)
+//                                                    lineTo(triangleWidth, size.height - cornerRadius)
+//                                                    close()
+//                                                }
+//
+//                                            }
+//
+//
+//
+//
+//                                            drawPath(path = trianglePath, color = color)
+//
+//
+//                                        }
+            .background(color = color, shape = RoundedCornerShape(10.dp))
+            .padding(8.dp)) {
+        val fontColor = if (isHighLightView) Color.Transparent else Color.White
+
+        Text(text = message, color = fontColor, fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+            modifier = Modifier.padding(bottom = 5.dp))
+        Text(text = sendUserMessage, fontWeight = FontWeight.Light, color = fontColor,
+            modifier = Modifier.padding(vertical = 2.dp), fontSize = 15.sp)
+
+
     }
 }

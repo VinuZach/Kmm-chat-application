@@ -84,7 +84,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirect
             Column(modifier = Modifier
                     .background(MaterialTheme.colorScheme.background, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .fillMaxWidth()
-                    .padding(5.dp)
+
                     .constrainAs(detailsSection)
                     {
                         bottom.linkTo(parent.bottom)
@@ -181,8 +181,6 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(), redirect
                     "Assign Room To Group"
 
                 Text(text = title)
-
-
             }
             )
 
@@ -211,12 +209,22 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(), redirect
                 }
 
                 selectedGroupName.value?.let {
-                    Row {
-                        Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = "back", modifier = Modifier.clickable {
-                            selectedGroupName.value = null
-                            retrieveChatOfGroup.invoke(-1, null)
-                        })
-                        Text(text = it, fontSize = 20.sp, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 10.dp))
+                    Row(verticalAlignment = Alignment.Top,
+                        modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.primary,
+                                  )
+                                .padding(10.dp)
+                    ) {
+                        Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = "back", modifier = Modifier
+                                .clickable {
+                                    selectedGroupName.value = null
+                                    retrieveChatOfGroup.invoke(-1, null)
+                                }
+                                .padding(5.dp), tint = Color.White)
+                        Text(text = it, modifier = Modifier.padding(start = 5.dp),
+                            fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+                            fontSize = 25.sp, color = Color.White, fontWeight = FontWeight.ExtraBold)
                     }
 
                 }
