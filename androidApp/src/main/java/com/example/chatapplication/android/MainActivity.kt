@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ChatApplicationTheme(darkTheme = false) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    MainPage()
+                    MainChatPageView()
                 }
             }
         }
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
     @Preview
     @Composable
-    fun MainPage() {
+    fun MainChatPageView() {
         val userName = remember {
             mutableStateOf("")
         }
@@ -54,27 +54,27 @@ class MainActivity : ComponentActivity() {
             }
         }
         NavHost(navController = navController, startDestination = "group_and_chat_listing") {
-
-            composable<NavigationChatRoomId> {
-                val chatRoomId = it.toRoute<NavigationChatRoomId>()
-                Log.d("asasdsadsad", "directChat: ")
-                ChatScreen(userName = userName.value, viewModel = chatViewModel, roomId = chatRoomId.roomId, roomName = chatRoomId.roomName)
-
-            }
             composable("group_and_chat_listing") {
                 ChatGroupAndListingMain(viewModel = chatViewModel, redirectToRoomById = { roomId, roomName ->
                     navController.navigate(NavigationChatRoomId(roomId, roomName))
                 }, redirectToRoomDetails = {
                     navController.navigate("room_details_page")
                 }, createNewChat =
-                {       roomId,roomName->
-                    navController.navigate(ChatCreationUpdate(roomId,roomName))
+                { roomId, roomName ->
+                    navController.navigate(ChatCreationUpdate(roomId, roomName))
                 })
 
             }
+            composable<NavigationChatRoomId> {
+                val chatRoomId = it.toRoute<NavigationChatRoomId>()
+                Log.d("asasdsadsad", "directChat: ")
+                ChatScreen(userName = userName.value, viewModel = chatViewModel, roomId = chatRoomId.roomId, roomName = chatRoomId.roomName)
+
+            }
+
             composable<ChatCreationUpdate> {
                 val ChatCreationUpdate = it.toRoute<ChatCreationUpdate>()
-                RoomCreationOrUpdate(ChatCreationUpdate,chatViewModel )
+                RoomCreationOrUpdate(ChatCreationUpdate, chatViewModel)
             }
 
 
@@ -87,4 +87,4 @@ class MainActivity : ComponentActivity() {
 data class NavigationChatRoomId(val roomId: Int, val roomName: String)
 
 @Serializable
-data class ChatCreationUpdate(val roomId: Int=-1, val roomName: String?)
+data class ChatCreationUpdate(val roomId: Int = -1, val roomName: String?)
