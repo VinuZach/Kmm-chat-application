@@ -75,7 +75,8 @@ import kotlinx.coroutines.flow.collectLatest
             Log.d("awhew", "cccc : $event")
             if (event == Lifecycle.Event.ON_START) viewModel.initSessionForChatRoom("/$roomId/", onConnected = {
                 val sendMessage =
-                    ChatMessageRequest(command = "join", user = userName, message = "", blocked_user = emptyList(), pageNumber = 0)
+                    ChatMessageRequest(command = "join", user = userName, message = "", blocked_user = emptyList(),
+                        pageNumber = 0)
                 viewModel.sendMessage(Gson().toJson(sendMessage))
             })
             else if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
@@ -90,8 +91,7 @@ import kotlinx.coroutines.flow.collectLatest
 
     Column(modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-    )
+            .background(Color.White))
 
     {
 
@@ -145,15 +145,17 @@ import kotlinx.coroutines.flow.collectLatest
 
                             val isOwnMessage = sendUserMessage == currentUser
 
-                            val color = if (isOwnMessage) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                            val color =
+                                if (isOwnMessage) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
 
 
                             Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                                 modifier = Modifier.fillMaxWidth()) {
-
+                                if (isOwnMessage)
                                 blockedUserList?.let {
                                     if (it.isNotEmpty()) {
-                                        ChatMessageView(MaterialTheme.colorScheme.tertiary, sendUserMessage, message, true)
+                                        ChatMessageView(MaterialTheme.colorScheme.tertiary, sendUserMessage, message,
+                                            true)
                                     }
                                 }
                                 ChatMessageView(color, sendUserMessage, message, false)
@@ -206,16 +208,20 @@ import kotlinx.coroutines.flow.collectLatest
 
 
                             Row(Modifier
-                                    .padding(2.dp)
-                                    .border(1.dp, Color.Black, RectangleShape),
+                                    .padding(horizontal = 4.dp, vertical = 8.dp)
+                                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp)),
                                 verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(checked = isUserChecked.value, onCheckedChange = {
-                                    if (!it) blockedUsers.add(user)
-                                    else blockedUsers.remove(user)
+                                Checkbox(
+                                    checked = isUserChecked.value,
+                                    onCheckedChange = {
+                                        if (!it) blockedUsers.add(user)
+                                        else blockedUsers.remove(user)
 
-                                    isUserChecked.value = it
-                                }, modifier = Modifier.padding(horizontal = 10.dp))
-                                Text(text = user, modifier = Modifier.padding(horizontal = 2.dp))
+                                        isUserChecked.value = it
+                                    },
+                                )
+                                Text(text = user, modifier = Modifier.padding(end = 15.dp),
+                                    fontFamily = MaterialTheme.typography.titleLarge.fontFamily)
                             }
 
                         }
@@ -228,8 +234,7 @@ import kotlinx.coroutines.flow.collectLatest
         Row(modifier = Modifier
                 .fillMaxWidth()
                 .background(color = MaterialTheme.colorScheme.surface),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             TextField(modifier = Modifier.weight(0.85f), value = messageText.value, onValueChange = {
                 messageText.value = it
                 if (it.text.isEmpty()) blockedUsers.clear()
@@ -241,51 +246,51 @@ import kotlinx.coroutines.flow.collectLatest
             }, colors = TextFieldDefaults.colors(unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 disabledContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedIndicatorColor =  MaterialTheme.colorScheme.surface,
-                focusedIndicatorColor =  MaterialTheme.colorScheme.surface,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.surface,
+                focusedIndicatorColor = MaterialTheme.colorScheme.surface,
                 focusedTextColor = MaterialTheme.colorScheme.secondary,
                 disabledTextColor = MaterialTheme.colorScheme.secondary,
                 unfocusedTextColor = MaterialTheme.colorScheme.secondary))
 
 
 
-            Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "send", modifier = Modifier
-                    .weight(0.15f)
+            Icon(imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "send",
+                modifier = Modifier
+                        .weight(0.15f)
 
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            if (viewModel.messageText.value.isNotEmpty()) {
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                if (viewModel.messageText.value.isNotEmpty()) {
 
-                                val sendMessage =
-                                    ChatMessageRequest(command = "content", user = userName, message = viewModel.messageText.value,
-                                        blocked_user = blockedUsers, pageNumber = 1)
+                                    val sendMessage = ChatMessageRequest(command = "content", user = userName,
+                                        message = viewModel.messageText.value, blocked_user = blockedUsers,
+                                        pageNumber = 1)
 
-                                viewModel.sendMessage(Gson().toJson(sendMessage))
-                                viewModel.onMessageChange("")
-
-
+                                    viewModel.sendMessage(Gson().toJson(sendMessage))
+                                    viewModel.onMessageChange("")
 
 
-                                blockedUsers.clear()
-                                newMessageSend.value = true
-                                messageText.value = TextFieldValue(text = "")
-                                viewModel.showUsersInChat(false)
-                            } else Toast
-                                    .makeText(context, "enter text", Toast.LENGTH_SHORT)
-                                    .show()
 
-                        }, onLongPress = {
 
-                            viewModel.showUsersInChat(true)
+                                    blockedUsers.clear()
+                                    newMessageSend.value = true
+                                    messageText.value = TextFieldValue(text = "")
+                                    viewModel.showUsersInChat(false)
+                                } else Toast
+                                        .makeText(context, "enter text", Toast.LENGTH_SHORT)
+                                        .show()
+
+                            }, onLongPress = {
+
+                                viewModel.showUsersInChat(true)
+                            })
                         })
-                    })
 
         }
     }
 }
 
-@Composable
-fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHighLightView: Boolean) {
+@Composable fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHighLightView: Boolean) {
     val modifier = if (isHighLightView) Modifier.padding(end = 18.dp, bottom = 15.dp) else Modifier.padding(10.dp)
     Column(modifier = modifier
             .width(200.dp)
@@ -323,7 +328,7 @@ fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHi
         Text(text = message, color = fontColor, fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
             modifier = Modifier.padding(bottom = 5.dp))
         Text(text = sendUserMessage, fontWeight = FontWeight.Light, color = fontColor,
-            modifier = Modifier.padding(vertical = 2.dp), fontSize = 15.sp)
+            modifier = Modifier.padding(vertical = 2.dp), fontSize = 12.sp)
 
 
     }
