@@ -21,7 +21,7 @@ fun GroupListRequestData.groupListToString(): String {
 
 
 @Serializable
-data class GroupDetailsResponseDto(val chatRoomWithTotalMessage: List<ChatRoomWithTotalMessage> = emptyList(),val clusterRoomGroups:List<ChatRoomWithTotalMessage> = emptyList(),val Chat_Type:String="")
+data class GroupDetailsResponseDto(val chatRoomWithTotalMessage: List<ChatRoomWithTotalMessage> = emptyList(),val clusterRoomGroups:List<ChatRoomWithTotalMessage> = emptyList(),val Chat_Type:String="",val requested_user:String="")
 
 @Serializable
 data class ChatRoomWithTotalMessage(val  roomID:Int?=null,val roomName:String="",val  clusterGroupId:String?=null,val totalMessages:Int=0,val roomCountUnderGroup:Int=0)

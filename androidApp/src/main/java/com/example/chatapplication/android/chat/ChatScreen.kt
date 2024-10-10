@@ -35,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
@@ -112,36 +111,10 @@ import kotlinx.coroutines.flow.collectLatest
 
 
             items(items = state.messages) { message ->
-                val messageDisplay: @Composable (sendUserMessage: String, currentUser: String, message: String, blocked_user: List<String>?) -> Unit =
-                    { sendUserMessage, currentUser, message, blockedUserList ->
+                val messageDisplay: @Composable (sendUserMessage: String, currentUser: String, message: String, blockedUser: List<String>?) -> Unit =
+                    { sendUserMessage, currentUser, message1, blockedUserList ->
 
                         Column {
-
-//                            blockedUserList?.let {
-//
-//                                if (displayBlockedUserSeperator) {
-//                                    if (it.isNotEmpty()) {
-//
-//                                        Spacer(modifier = Modifier.padding(10.dp))
-//                                        Row(Modifier.fillMaxWidth()) {
-//                                            val blockedUserText = if (it.size == 1) it.first()
-//                                            else "${it.first()} and ${(it.size - 1)} others"
-//                                            Text(text = "blocked for $blockedUserText", modifier = Modifier.fillMaxWidth(),
-//                                                textAlign = TextAlign.Center)
-//                                        }
-//                                        Spacer(modifier = Modifier.padding(10.dp))
-//                                    } else {
-//                                        Spacer(modifier = Modifier.padding(10.dp))
-//                                        Row(Modifier.fillMaxWidth()) {
-//
-//                                            Text(text = "----------------------", modifier = Modifier.fillMaxWidth(),
-//                                                textAlign = TextAlign.Center)
-//                                        }
-//                                        Spacer(modifier = Modifier.padding(10.dp))
-//                                    }
-//                                }
-//                            }
-
 
                             val isOwnMessage = sendUserMessage == currentUser
 
@@ -151,14 +124,16 @@ import kotlinx.coroutines.flow.collectLatest
 
                             Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                                 modifier = Modifier.fillMaxWidth()) {
-                                if (isOwnMessage)
+                                Log.d("zxczxczx", "ChatScreen: ${blockedUserList?.isEmpty()}")
+//                                if (isOwnMessage)
                                 blockedUserList?.let {
                                     if (it.isNotEmpty()) {
-                                        ChatMessageView(MaterialTheme.colorScheme.tertiary, sendUserMessage, message,
-                                            true)
+                                        ChatMessageView(MaterialTheme.colorScheme.tertiary, sendUserMessage,
+                                            message1,
+                                            true, isOwnMessage)
                                     }
                                 }
-                                ChatMessageView(color, sendUserMessage, message, false)
+                                ChatMessageView(color, sendUserMessage, message1, false, isOwnMessage)
                             }
                         }
                     }
@@ -290,8 +265,15 @@ import kotlinx.coroutines.flow.collectLatest
     }
 }
 
-@Composable fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHighLightView: Boolean) {
-    val modifier = if (isHighLightView) Modifier.padding(end = 18.dp, bottom = 15.dp) else Modifier.padding(10.dp)
+@Composable
+fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHighLightView: Boolean,
+    isOwnMessage: Boolean) {
+    val modifier = if (isHighLightView) {
+        if (isOwnMessage)
+            Modifier.padding(end = 18.dp, bottom = 15.dp)
+        else
+            Modifier.padding(start = 18.dp, bottom = 15.dp)
+    } else Modifier.padding(10.dp)
     Column(modifier = modifier
             .width(200.dp)
 

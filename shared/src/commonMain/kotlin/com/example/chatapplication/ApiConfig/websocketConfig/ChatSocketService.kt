@@ -1,12 +1,12 @@
 package com.example.chatapplication.ApiConfig.websocketConfig
 
 import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupDetailsResponseDto
-import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupListRequestData
 import com.example.chatapplication.ApiConfig.websocketConfig.model.MessageDto
 import com.example.chatapplication.getHttpClientForWebSocket
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.url
 import io.ktor.http.Url
+import io.ktor.utils.io.core.Closeable
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
@@ -23,15 +23,15 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
-import io.ktor.utils.io.core.Closeable
 
 class ChatSocketService {
 
     private var socket: WebSocketSession? = null
     private var client = getHttpClientForWebSocket()
+    private var currentUserName: String = ""
+    suspend fun initSession(roomId: String, currentUserName: String): Resource<Unit> {
 
-    suspend fun initSession(roomId: String): Resource<Unit> {
-
+        this.currentUserName = currentUserName
         return try {
 
             socket = client.webSocketSession {
@@ -83,6 +83,7 @@ class ChatSocketService {
                 val json = (it as Frame.Text).readText()
 
                 val messageDto = Json.decodeFromString<MessageDto>(json)
+
                 messageDto
 
             }?.asCommonFlow() ?: flow<MessageDto> { }.asCommonFlow()
@@ -93,6 +94,7 @@ class ChatSocketService {
         }
     }
 
+    var previousGroupMessageDTO = GroupDetailsResponseDto()
     fun observeGroupList(): CommonFlow<GroupDetailsResponseDto> {
         return try {
             socket?.incoming?.receiveAsFlow()?.filter {
@@ -101,7 +103,12 @@ class ChatSocketService {
                 val json = (it as Frame.Text).readText()
 
                 val messageDto = Json.decodeFromString<GroupDetailsResponseDto>(json)
-                messageDto
+                print("aaa current user :${currentUserName}  requested : ${messageDto.requested_user}")
+                if (messageDto.Chat_Type == ChatType.REFRESH_CHAT || (currentUserName.isEmpty() || currentUserName == messageDto.requested_user)) {
+                    previousGroupMessageDTO = messageDto
+                    messageDto
+                } else
+                    previousGroupMessageDTO
 
             }?.asCommonFlow() ?: flow<GroupDetailsResponseDto> { }.asCommonFlow()
 

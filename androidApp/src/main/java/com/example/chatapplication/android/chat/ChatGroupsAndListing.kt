@@ -1,5 +1,6 @@
 package com.example.chatapplication.android.chat
 
+
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -34,9 +35,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,14 +50,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
 import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupListRequestData
+import com.example.chatapplication.cacheConfig.CacheManager
+import com.example.chatapplication.cacheConfig.USER_NAME
 import com.google.gson.Gson
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 
 
 @Preview
 @Composable
-fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirectToRoomById: (Int, String) -> Unit = { a, b -> },
-    redirectToRoomDetails: (Int?) -> Unit = { a -> },
-    createNewChat: (Int, String?) -> Unit = { a, b -> }) {
+fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(),
+    redirectToRoomById: (Int, String) -> Unit = { _, _ -> },
+    redirectToRoomDetails: (Int?) -> Unit = { _ -> },
+    createNewChat: (Int, String?) -> Unit = { _, _ -> }) {
 
     Scaffold(content = { paddingValues ->
 
@@ -82,7 +90,8 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirect
                 }
             }
             Column(modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                    .background(MaterialTheme.colorScheme.background,
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .fillMaxWidth()
 
                     .constrainAs(detailsSection)
@@ -100,7 +109,8 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirect
 
         }
     }, floatingActionButton = {
-        FloatingActionButton(onClick = { }, containerColor = MaterialTheme.colorScheme.tertiary, shape = RoundedCornerShape(50.dp)) {
+        FloatingActionButton(onClick = { }, containerColor = MaterialTheme.colorScheme.tertiary,
+            shape = RoundedCornerShape(50.dp)) {
             Icon(imageVector = Icons.Filled.Add, contentDescription = "add new chat")
         }
     })
@@ -109,9 +119,10 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(), redirect
 }
 
 @Composable
-fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(), redirectToRoomById: (Int, String) -> Unit = { a, b -> },
-    redirectToRoomDetails: (Int?) -> Unit = { a -> },
-    createNewChat: (Int, String?) -> Unit = { a, b -> }) {
+fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(),
+    redirectToRoomById: (Int, String) -> Unit = { _, _ -> },
+    redirectToRoomDetails: (Int?) -> Unit = { _ -> },
+    createNewChat: (Int, String?) -> Unit = { _, _ -> }) {
     Column(modifier = Modifier.fillMaxHeight(0.9f)) {
 
         val selectedGroupName = remember {
@@ -122,13 +133,22 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(), redirect
             retrieveChatListBasedOnGroup(viewModel, groupId = groupId)
         }
         val lifeCycleOwner = LocalSavedStateRegistryOwner.current
+        val coroutineScope = rememberCoroutineScope()
+        val context = LocalContext.current
 
-        DisposableEffect(key1 = lifeCycleOwner) {
+        DisposableEffect(key1 = true) {
+            coroutineScope.launch {
+                val cacheManager = CacheManager.getManger(context = context)
+                val userNameFlow = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
+                viewModel.userName.value = userNameFlow!!
+                retrieveChatOfGroup.invoke(-1, null)
+                Log.e("asdasd", "GroupListingAndChatView: $userNameFlow")
+            }.invokeOnCompletion {
+                Log.e("asdasd", "comp")
+            }
 
             val observer = LifecycleEventObserver() { _, event ->
-                Log.d("awhew", "ChatGroupAndListingMain: $event")
-                if (event == Lifecycle.Event.ON_START) retrieveChatOfGroup.invoke(-1, null)
-                else if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
+                if (event == Lifecycle.Event.ON_STOP) viewModel.disconnect()
             }
             lifeCycleOwner.lifecycle.addObserver(observer)
             onDispose {
@@ -136,18 +156,19 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(), redirect
             }
 
         }
-        Log.e("awhew", "retrieveChatListBasedOnGroup: ${viewModel.state.value.groupDetailsList}")
+
 
         val displayRoomToGroup: @Composable (ChatRoomWithTotalMessage, ChatRoomWithTotalMessage) -> Unit =
             { groupDetails, chatDetails ->
-                Log.d("asdasd", "GroupItemDetail: ${groupDetails.roomName}  ${chatDetails.roomName}")
-                viewModel.assignRoomToGroupMutableState.value = ChatViewModel.AssignRoomToGroup(groupDetails, chatDetails)
+
+                viewModel.assignRoomToGroupMutableState.value =
+                    ChatViewModel.AssignRoomToGroup(groupDetails, chatDetails)
 
             }
 
         viewModel.assignRoomToGroupMutableState.value?.let {
             AlertDialog(title = {
-                Log.d("adasdas", "ChatGroupAndListingMain: ${it.roomDetails.clusterGroupId}")
+
                 val title: String = if (it.roomDetails.clusterGroupId != "None") {
                     "Reassign group?"
 
@@ -162,7 +183,8 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(), redirect
                 }
             }, onDismissRequest = { }, confirmButton = {
                 Button(onClick = {
-                    viewModel.assignRoomToSelectedGroup(it.groupDetails.clusterGroupId!!.toInt(), it.roomDetails.roomID!!)
+                    viewModel.assignRoomToSelectedGroup(it.groupDetails.clusterGroupId!!.toInt(),
+                        it.roomDetails.roomID!!)
                     viewModel.assignRoomToGroupMutableState.value = null
                 }) {
                     Text(text = "Confirm")
@@ -212,16 +234,18 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(), redirect
                     Row(verticalAlignment = Alignment.Top,
                         modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.primary,
-                                  )
+                                .background(
+                                    MaterialTheme.colorScheme.primary,
+                                )
                                 .padding(10.dp)
                     ) {
-                        Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = "back", modifier = Modifier
-                                .clickable {
-                                    selectedGroupName.value = null
-                                    retrieveChatOfGroup.invoke(-1, null)
-                                }
-                                .padding(5.dp), tint = Color.White)
+                        Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = "back",
+                            modifier = Modifier
+                                    .clickable {
+                                        selectedGroupName.value = null
+                                        retrieveChatOfGroup.invoke(-1, null)
+                                    }
+                                    .padding(5.dp), tint = Color.White)
                         Text(text = it, modifier = Modifier.padding(start = 5.dp),
                             fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
                             fontSize = 25.sp, color = Color.White, fontWeight = FontWeight.ExtraBold)
@@ -231,7 +255,7 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(), redirect
                 LazyColumn(modifier = Modifier
                         .padding(top = 10.dp)
                         .fillMaxHeight()) {
-                    Log.d("adasdas", "ChatGroupAndListingMain: ${viewModel.state.value.groupDetailsList.chatRoomWithTotalMessage.size}")
+
                     items(items = viewModel.state.value.groupDetailsList.chatRoomWithTotalMessage) {
                         ChatItemDetails(chatRoomDetails = it, redirectToRoomById)
                     }
@@ -247,9 +271,9 @@ fun retrieveChatListBasedOnGroup(viewModel: ChatViewModel, groupId: Int) {
 
     viewModel.initSessionForGroupListing("/chatList")
     {
-        Log.e("awhew", "retrieveChatListBasedOnGroup: $groupId")
-
-        val groupListRequestData = GroupListRequestData("aaa@aaa.com", groupId)
+        Log.d("asdasd", "retrieveChatListBasedOnGroup: groupid :${viewModel.userName.value}")
+        val groupListRequestData = GroupListRequestData(viewModel.userName.value, groupId)
+        viewModel.groupListRequestData = groupListRequestData
         viewModel.sendMessage(Gson().toJson(groupListRequestData))
     }
 }
@@ -257,8 +281,8 @@ fun retrieveChatListBasedOnGroup(viewModel: ChatViewModel, groupId: Int) {
 @Preview
 @Composable
 fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),
-    getChatListOfGroupId: (Int, String?) -> Unit = { a, b -> },
-    displayRoomToGroup: @Composable (ChatRoomWithTotalMessage, ChatRoomWithTotalMessage) -> Unit = { a, b -> }) {
+    getChatListOfGroupId: (Int, String?) -> Unit = { _, _ -> },
+    displayRoomToGroup: @Composable (ChatRoomWithTotalMessage, ChatRoomWithTotalMessage) -> Unit = { _, _ -> }) {
 
     val chatToGroupList = remember {
         mutableStateMapOf<Int, Int>()
@@ -272,7 +296,7 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
         chatGroupItem?.let {
             if (isInBound) {
                 chatToGroupList[chatGroupItem.roomID!!] = chatGroupItem.roomID!!
-                Log.d("asdasd", "ccc")
+
                 displayRoomToGroup.invoke(groupDetails, it)
             }
         }
@@ -286,7 +310,8 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
                 }
                 .padding(3.dp),
             border = BorderStroke(width = if (isInBound) 2.dp else 1.5.dp, color = bgColor),
-            colors = CardColors(contentColor = Color.Black, containerColor = Color.White, disabledContainerColor = Color.White,
+            colors = CardColors(contentColor = Color.Black, containerColor = Color.White,
+                disabledContainerColor = Color.White,
                 disabledContentColor = Color.White)) {
             Column() {
                 Text(text = groupName, modifier = Modifier.padding(vertical = 8.dp, horizontal = 30.dp),
@@ -294,7 +319,8 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
                     fontWeight = if (isInBound) FontWeight.ExtraBold else FontWeight.Normal,
                     color = if (isInBound) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary)
                 if (chatToGroupList.isNotEmpty()) {
-                    Text(text = "${chatToGroupList.size} Items", modifier = Modifier.padding(vertical = 6.dp, horizontal = 30.dp),
+                    Text(text = "${chatToGroupList.size} Items",
+                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 30.dp),
                         fontFamily = MaterialTheme.typography.displayMedium.fontFamily,
                         fontWeight = if (isInBound) FontWeight.Bold else FontWeight.Normal,
                         color = if (isInBound) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary)
@@ -310,10 +336,11 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
 @Preview
 @Composable
 fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMessage(),
-    redirectToRoomById: (Int, String) -> Unit = { a, b -> }) {
+    redirectToRoomById: (Int, String) -> Unit = { _, _ -> }) {
     Column {
+
         DragTarget(modifier = Modifier
-                .fillMaxWidth()
+
                 .clickable {
 
                     chatRoomDetails.let { roomId ->
@@ -325,6 +352,9 @@ fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTota
                 color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(20.dp))
 
         }
+
+
+
         HorizontalDivider(thickness = 1.dp)
     }
 

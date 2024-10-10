@@ -1,30 +1,29 @@
 package com.example.chatapplication.android.chat
 
+
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
+import com.example.chatapplication.ApiConfig.websocketConfig.ChatType
 import com.example.chatapplication.ApiConfig.websocketConfig.Resource
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithTotalMessage
+import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupListRequestData
 import com.example.chatapplication.ApiHandler
 import com.example.chatapplication.Greeting
-import com.example.chatapplication.cacheConfig.USER_NAME
-import kotlinx.coroutines.async
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-class ChatViewModel : ViewModel()
-{
+class ChatViewModel : ViewModel() {
 
+    var groupListRequestData: GroupListRequestData? = null
     private lateinit var chatSocketService: ChatSocketService
 
 
@@ -37,62 +36,55 @@ class ChatViewModel : ViewModel()
     private val _toastEvent = MutableSharedFlow<String>()
     val toastEvent = _toastEvent.asSharedFlow()
 
-   private val _showUsersInChat= mutableStateOf(false)
-    val showUsersInChat:State<Boolean> =_showUsersInChat
+    private val _showUsersInChat = mutableStateOf(false)
+    val showUsersInChat: State<Boolean> = _showUsersInChat
 
     data class AssignRoomToGroup(var groupDetails: ChatRoomWithTotalMessage, var roomDetails: ChatRoomWithTotalMessage)
 
     var assignRoomToGroupMutableState: MutableState<AssignRoomToGroup?> = mutableStateOf(null)
 
+    var userName: MutableState<String> = mutableStateOf("")
     val apiHandler by lazy {
         ApiHandler()
     }
 
-    fun showUsersInChat(showUsers:Boolean)
-    {
-        _showUsersInChat.value=showUsers
+
+    fun showUsersInChat(showUsers: Boolean) {
+        _showUsersInChat.value = showUsers
     }
-    fun initSessionForGroupListing(groupId: String, onConnected: (() -> Unit)? = null)
-    {
+
+    fun initSessionForGroupListing(groupId: String, onConnected: (() -> Unit)? = null) {
 
         initSession(groupId, false, onConnected)
     }
 
-    fun initSessionForChatRoom(roomId: String, onConnected: (() -> Unit)? = null)
-    {
+    fun initSessionForChatRoom(roomId: String, onConnected: (() -> Unit)? = null) {
         _state.value = ChatState()
         initSession(roomId, true, onConnected)
     }
 
-    private fun initSession(roomId: String, isForChat: Boolean = true, onConnected: (() -> Unit)?)
-    {
+    private fun initSession(roomId: String, isForChat: Boolean = true, onConnected: (() -> Unit)?) {
         this.chatSocketService = Greeting().provideChatSocketService()
         viewModelScope.launch {
-            val result = chatSocketService.initSession(roomId = roomId)
+            Log.e("asdasd", "MainChatPageView: 111 ${userName.value}", )
+            val result = chatSocketService.initSession(roomId = roomId, currentUserName = userName.value)
 
-            when (result)
-            {
-                is Resource.Success ->
-                {
+            when (result) {
+                is Resource.Success -> {
                     onConnected?.invoke()
-                    if (isForChat)
-                    {
+                    if (isForChat) {
                         chatSocketService.observeMessages().onEach { message ->
-                            Log.d("1111", "initSession: $message", )
-                            if (message.message.trim().isEmpty())
-                            {
-                                if (state.value.messages.isNotEmpty())
-                                {
+
+                            if (message.message.trim().isEmpty()) {
+                                if (state.value.messages.isNotEmpty()) {
                                     state.value.messages.first().prevMessages?.let { existingPrevMessage ->
                                         if (existingPrevMessage.isNotEmpty()) _state.value = ChatState()
                                     }
-                                    try
-                                    {
+                                    try {
                                         state.value.messages.last().prevMessages?.let { existingPrevMessage ->
                                             if (existingPrevMessage.isNotEmpty()) _state.value = ChatState()
                                         }
-                                    } catch (e: Exception)
-                                    {
+                                    } catch (e: Exception) {
                                         e.printStackTrace()
                                     }
                                 }
@@ -104,19 +96,18 @@ class ChatViewModel : ViewModel()
 
                             _state.value = state.value.copy(messages = newList)
                         }.launchIn(viewModelScope)
-                    }
-                    else
-                    {
+                    } else {
                         chatSocketService.observeGroupList().onEach { message ->
-                            Log.d("awheghhqw", "initSession: $message")
-
-                            _state.value = state.value.copy(groupDetailsList = message)
+                            Log.d("asasdsad", "initSession: $message")
+                            if (message.Chat_Type == ChatType.REFRESH_CHAT) {
+                                sendMessage(Gson().toJson(groupListRequestData))
+                            } else
+                                _state.value = state.value.copy(groupDetailsList = message)
                         }.launchIn(viewModelScope)
                     }
                 }
 
-                is Resource.Error   ->
-                {
+                is Resource.Error   -> {
                     _toastEvent.emit(result.message ?: "Unknown Error")
                 }
 
@@ -126,20 +117,17 @@ class ChatViewModel : ViewModel()
 
     }
 
-    fun onMessageChange(message: String)
-    {
+    fun onMessageChange(message: String) {
         _messageText.value = message
     }
 
-    fun disconnect()
-    {
+    fun disconnect() {
         viewModelScope.launch {
             chatSocketService.closeSession()
         }
     }
 
-    fun sendMessage(message: String)
-    {
+    fun sendMessage(message: String) {
         viewModelScope.launch {
             chatSocketService.sendMessage(message)
             _messageText.value = ""
@@ -148,31 +136,28 @@ class ChatViewModel : ViewModel()
     }
 
 
-    override fun onCleared()
-    {
+    override fun onCleared() {
         super.onCleared()
         disconnect()
     }
 
-    fun assignRoomToSelectedGroup(groupId: Int, roomID: Int, userOverride: Boolean = true)
-    {
+    fun assignRoomToSelectedGroup(groupId: Int, roomID: Int, userOverride: Boolean = true) {
         viewModelScope.launch {
-            apiHandler.assignRoomToSelectedGroup(roomID, groupId, userOverride, onResultObtained = { isSuccess, result ->
-                Log.d("asdasdasd", "assignRoomToSelectedGroup: $isSuccess , $result")
-            })
+            apiHandler.assignRoomToSelectedGroup(roomID, groupId, userOverride,
+                onResultObtained = { isSuccess, result ->
+
+                })
         }
     }
 
-    fun retrieveUserNameFromCache(cacheManager: DataStore<Preferences>) = viewModelScope.async {
-        cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
-    }
+
 
     fun retrieveUserEmailList(onResultObtained: (Boolean, Any) -> Unit) {
         viewModelScope.launch {
             apiHandler.retrieveAllUserEmails(object : (Boolean, Any) -> Unit {
                 override fun invoke(p1: Boolean, p2: Any) {
-                    Log.d("asdsad", "invoke: $p1")
-                    onResultObtained.invoke(p1,p2)
+
+                    onResultObtained.invoke(p1, p2)
 
                 }
 
@@ -180,9 +165,10 @@ class ChatViewModel : ViewModel()
         }
     }
 
-    fun createOrUpdateChat(roomName: String,roomID: Int?, selectedUserForChat: List<String>,onResultObtained: (Boolean, Any) -> Unit) {
+    fun createOrUpdateChat(roomName: String, roomID: Int?, selectedUserForChat: List<String>,
+        onResultObtained: (Boolean, Any) -> Unit) {
         viewModelScope.launch {
-            apiHandler.createOrUpdateChat(roomName,roomID, selectedUserForChat,onResultObtained)
+            apiHandler.createOrUpdateChat(roomName, roomID, selectedUserForChat, onResultObtained)
         }
 
     }
