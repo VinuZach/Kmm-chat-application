@@ -90,7 +90,7 @@ import kotlinx.coroutines.flow.collectLatest
 
     Column(modifier = Modifier
             .fillMaxSize()
-            .background(Color.White))
+            .background(MaterialTheme.colorScheme.background))
 
     {
 
@@ -99,7 +99,7 @@ import kotlinx.coroutines.flow.collectLatest
             modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.primary)
-                    .padding(10.dp))
+                    .padding(vertical = 18.dp, horizontal = 10.dp))
 
 
         LazyColumn(modifier = Modifier
@@ -305,10 +305,10 @@ fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHi
 //                                        }
             .background(color = color, shape = RoundedCornerShape(10.dp))
             .padding(8.dp)) {
-        val fontColor = if (isHighLightView) Color.Transparent else Color.White
+        val fontColor = if (isHighLightView) Color.Transparent else MaterialTheme.colorScheme.background
 
         Text(text = message, color = fontColor, fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-            modifier = Modifier.padding(bottom = 5.dp))
+            modifier = Modifier.padding(bottom = 5.dp), fontSize = 20.sp)
         Text(text = sendUserMessage, fontWeight = FontWeight.Light, color = fontColor,
             modifier = Modifier.padding(vertical = 2.dp), fontSize = 12.sp)
 

@@ -15,8 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(primary = Primary_Color, secondary = Secondary_Color, tertiary = Accent_Color
-    ,background = BackGround_color,surface = TextField_Background)
+private val DarkColorScheme = darkColorScheme(primary = Primary_Color_dark, secondary = Secondary_Color_dark, tertiary = Accent_Color_dark
+    ,background = BackGround_color_dark,surface = TextField_Background_dark)
 
 private val LightColorScheme = lightColorScheme(primary = Primary_Color, secondary = Secondary_Color, tertiary = Accent_Color
         ,background = BackGround_color, surface = TextField_Background
@@ -33,16 +33,16 @@ private val LightColorScheme = lightColorScheme(primary = Primary_Color, seconda
 
 @Composable
 fun ChatApplicationTheme(darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
+
     dynamicColor: Boolean = true, content: @Composable () -> Unit)
 {
     val colorScheme = when
     {
-//        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-//        {
-//            val context = LocalContext.current
-//            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-//        }
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+        {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
 
         darkTheme                                                      -> DarkColorScheme
         else                                                           -> LightColorScheme

@@ -11,15 +11,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.chatapplication.android.MainActivity
 import com.example.chatapplication.android.theme.ChatApplicationTheme
-import com.example.chatapplication.cacheConfig.CacheManager
-import com.example.chatapplication.cacheConfig.USER_NAME
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class AuthenticationActivity : ComponentActivity()
@@ -32,25 +28,25 @@ class AuthenticationActivity : ComponentActivity()
         enableEdgeToEdge()
         setContent {
 
-            ChatApplicationTheme {
+            ChatApplicationTheme(dynamicColor = true) {
 
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
                     val coroutineScope = rememberCoroutineScope()
-                    val context = LocalContext.current
+                   // val context = LocalContext.current
 
 
                     LaunchedEffect(key1 = true) {
                         coroutineScope.launch {
 
-                            val cacheManager = CacheManager.getManger(context = context)
-                            val userNameFlow = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
+//                            val cacheManager = CacheManager.getManger(context = context)
+//                            val userNameFlow = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
 
-                          if (userNameFlow!=null)
-                          {
-                              finish()
-                              startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
-                          }
+//                          if (userNameFlow!=null)
+//                          {
+//                              finish()
+//                              startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
+//                          }
                         }
                     }
 

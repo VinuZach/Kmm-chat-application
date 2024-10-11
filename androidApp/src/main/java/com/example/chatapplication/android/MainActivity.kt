@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ChatApplicationTheme(darkTheme = false) {
+            ChatApplicationTheme(dynamicColor = true) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     MainChatPageView()
                 }

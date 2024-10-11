@@ -310,22 +310,15 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
                 }
                 .padding(3.dp),
             border = BorderStroke(width = if (isInBound) 2.dp else 1.5.dp, color = bgColor),
-            colors = CardColors(contentColor = Color.Black, containerColor = Color.White,
-                disabledContainerColor = Color.White,
-                disabledContentColor = Color.White)) {
+            colors = CardColors(contentColor = Color.Black, containerColor =MaterialTheme.colorScheme.background,
+                disabledContainerColor = MaterialTheme.colorScheme.background,
+                disabledContentColor = MaterialTheme.colorScheme.background)) {
             Column() {
                 Text(text = groupName, modifier = Modifier.padding(vertical = 8.dp, horizontal = 30.dp),
                     fontFamily = MaterialTheme.typography.displayMedium.fontFamily,
                     fontWeight = if (isInBound) FontWeight.ExtraBold else FontWeight.Normal,
                     color = if (isInBound) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary)
-                if (chatToGroupList.isNotEmpty()) {
-                    Text(text = "${chatToGroupList.size} Items",
-                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 30.dp),
-                        fontFamily = MaterialTheme.typography.displayMedium.fontFamily,
-                        fontWeight = if (isInBound) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isInBound) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary)
 
-                }
             }
         }
 
@@ -340,7 +333,7 @@ fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTota
     Column {
 
         DragTarget(modifier = Modifier
-
+                .fillMaxWidth()
                 .clickable {
 
                     chatRoomDetails.let { roomId ->
