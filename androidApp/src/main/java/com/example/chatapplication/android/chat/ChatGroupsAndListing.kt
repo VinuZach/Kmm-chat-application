@@ -69,9 +69,11 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(),
         Text(text = "Icon")
 
     }, bodyView = {
-        GroupListingAndChatView(viewModel, redirectToRoomById, redirectToRoomDetails, createNewChat)
+        GroupListingAndChatView(viewModel, redirectToRoomById)
     }, floatingActionButton = {
-        FloatingActionButton(onClick = { }, containerColor = MaterialTheme.colorScheme.tertiary,
+        FloatingActionButton(onClick = {
+            createNewChat.invoke(-1, null)
+        }, containerColor = MaterialTheme.colorScheme.tertiary,
             shape = RoundedCornerShape(50.dp)) {
             Icon(imageVector = Icons.Filled.Add, contentDescription = "add new chat")
         }
@@ -133,9 +135,7 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(),
 
 @Composable
 fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(),
-    redirectToRoomById: (Int, String) -> Unit = { _, _ -> },
-    redirectToRoomDetails: (Int?) -> Unit = { _ -> },
-    createNewChat: (Int, String?) -> Unit = { _, _ -> }) {
+    redirectToRoomById: (Int, String) -> Unit = { _, _ -> }   ) {
     Column(modifier = Modifier.fillMaxHeight(0.9f)) {
 
         val selectedGroupName = remember {
@@ -231,7 +231,7 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(),
                     horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
                     item {
                         Button(modifier = Modifier.padding(end = 5.dp), onClick = {
-                            createNewChat.invoke(-1, null)
+
                         }) {
                             Icon(imageVector = Icons.Filled.Add, contentDescription = "add new groupd")
                         }
