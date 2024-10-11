@@ -6,6 +6,7 @@ import com.example.chatapplication.ApiConfig.model.ChatCreationOrUpdate
 import com.example.chatapplication.ApiConfig.model.NewUserRegistrationRequest
 import com.example.chatapplication.ApiConfig.model.NewUserRegistrationResponse
 import com.example.chatapplication.ApiConfig.model.UserAuthenticationResponse
+import com.example.chatapplication.ApiConfig.model.UserDetails
 import com.example.chatapplication.ApiConfig.model.UsersEmailsResponse
 import com.example.chatapplication.ApiConfig.websocketConfig.AssignRoomToGroupRequest
 import io.ktor.client.HttpClient
@@ -26,7 +27,8 @@ import kotlinx.coroutines.launch
 class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
 
 
-    suspend fun assignRoomToSelectedGroup(roomId: Int, groupId: Int, userOverride: Boolean, onResultObtained: (Boolean, Any) -> Unit) {
+    suspend fun assignRoomToSelectedGroup(roomId: Int, groupId: Int, userOverride: Boolean,
+        onResultObtained: (Boolean, Any) -> Unit) {
         var result = BaseResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
 
@@ -71,12 +73,13 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
 
     }
 
-    suspend fun retrieveAllUserEmails(onResultObtained: (Boolean, Any) -> Unit) {
+    suspend fun retrieveAllUserEmails(currentUserName: String, onResultObtained: (Boolean, Any) -> Unit) {
         var result = UsersEmailsResponse(false)
 
         val httpResponse: HttpResponse? = try {
             apiCallManager.request {
                 contentType(ContentType.Application.Json)
+                setBody(UserDetails(currentUserName))
                 url(HttpEndPoints.RetrieveAllUsersEmail.url)
                 method = HttpMethod.Post
 
@@ -95,7 +98,8 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
     }
 
 
-    suspend fun createNewUser(userName: String, password: String, email: String, onResultObtained: (Boolean, Any) -> Unit) {
+    suspend fun createNewUser(userName: String, password: String, email: String,
+        onResultObtained: (Boolean, Any) -> Unit) {
         var result = NewUserRegistrationResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
             apiCallManager.request {
@@ -118,7 +122,8 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
     }
 
 
-  suspend  fun createOrUpdateChat(roomName: String, roomId: Int?,selectedUserForChat: List<String>,onResultObtained:(Boolean, Any) -> Unit): Unit {
+    suspend fun createOrUpdateChat(roomName: String, roomId: Int?, selectedUserForChat: List<String>,
+        onResultObtained: (Boolean, Any) -> Unit) {
         var result = BaseResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
 
@@ -127,7 +132,7 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
                 url(HttpEndPoints.CreateOrUpdateChat.url)
                 method = HttpMethod.Post
 
-                setBody(ChatCreationOrUpdate(roomName,null,selectedUserForChat))
+                setBody(ChatCreationOrUpdate(roomName, roomId, selectedUserForChat))
             }
         } catch (e: Exception) {
             e.printStackTrace()

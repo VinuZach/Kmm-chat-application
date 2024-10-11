@@ -32,9 +32,8 @@ private val LightColorScheme = lightColorScheme(primary = Primary_Color, seconda
     */)
 
 @Composable
-fun ChatApplicationTheme(darkTheme: Boolean = isSystemInDarkTheme(),
-
-    dynamicColor: Boolean = true, content: @Composable () -> Unit)
+fun ChatApplicationTheme(darkTheme: Boolean = false,//isSystemInDarkTheme(),
+    dynamicColor: Boolean = false, content: @Composable () -> Unit)
 {
     val colorScheme = when
     {

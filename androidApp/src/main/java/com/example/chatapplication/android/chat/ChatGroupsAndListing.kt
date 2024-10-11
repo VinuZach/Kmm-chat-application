@@ -64,56 +64,69 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(),
     redirectToRoomDetails: (Int?) -> Unit = { _ -> },
     createNewChat: (Int, String?) -> Unit = { _, _ -> }) {
 
-    Scaffold(content = { paddingValues ->
+    TitleWithCurvedEdgeBody(titleView = {
+        Text(text = "side menu")
+        Text(text = "Icon")
 
-        ConstraintLayout(modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.primary)) {
-            val (logoSection, detailsSection) = createRefs()
-            Column(verticalArrangement = Arrangement.Center, modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp)
-                    .constrainAs(logoSection)
-                    {
-                        top.linkTo(parent.top)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        bottom.linkTo(detailsSection.top)
-                    },
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp)) {
-                    Text(text = "side menu")
-                    Text(text = "Icon")
-                }
-            }
-            Column(modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background,
-                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                    .fillMaxWidth()
-
-                    .constrainAs(detailsSection)
-                    {
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-
-                    }, verticalArrangement = Arrangement.Top) {
-
-                GroupListingAndChatView(viewModel, redirectToRoomById, redirectToRoomDetails, createNewChat)
-
-            }
-
-
-        }
+    }, bodyView = {
+        GroupListingAndChatView(viewModel, redirectToRoomById, redirectToRoomDetails, createNewChat)
     }, floatingActionButton = {
         FloatingActionButton(onClick = { }, containerColor = MaterialTheme.colorScheme.tertiary,
             shape = RoundedCornerShape(50.dp)) {
             Icon(imageVector = Icons.Filled.Add, contentDescription = "add new chat")
         }
+
     })
+//    Scaffold(content = { paddingValues ->
+//
+//        ConstraintLayout(modifier = Modifier
+//                .padding(paddingValues)
+//                .fillMaxSize()
+//                .background(MaterialTheme.colorScheme.primary)) {
+//            val (logoSection, detailsSection) = createRefs()
+//            Column(verticalArrangement = Arrangement.Center, modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(10.dp)
+//                    .constrainAs(logoSection)
+//                    {
+//                        top.linkTo(parent.top)
+//                        start.linkTo(parent.start)
+//                        end.linkTo(parent.end)
+//                        bottom.linkTo(detailsSection.top)
+//                    },
+//                horizontalAlignment = Alignment.CenterHorizontally) {
+//                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(10.dp)) {
+//                    Text(text = "side menu")
+//                    Text(text = "Icon")
+//                }
+//            }
+//            Column(modifier = Modifier
+//                    .background(MaterialTheme.colorScheme.background,
+//                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+//                    .fillMaxWidth()
+//
+//                    .constrainAs(detailsSection)
+//                    {
+//                        bottom.linkTo(parent.bottom)
+//                        start.linkTo(parent.start)
+//                        end.linkTo(parent.end)
+//
+//                    }, verticalArrangement = Arrangement.Top) {
+//
+//                GroupListingAndChatView(viewModel, redirectToRoomById, redirectToRoomDetails, createNewChat)
+//
+//            }
+//
+//
+//        }
+//    }, floatingActionButton = {
+//        FloatingActionButton(onClick = { }, containerColor = MaterialTheme.colorScheme.tertiary,
+//            shape = RoundedCornerShape(50.dp)) {
+//            Icon(imageVector = Icons.Filled.Add, contentDescription = "add new chat")
+//        }
+//    })
 
 
 }
@@ -310,7 +323,7 @@ fun GroupItemDetail(groupDetails: ChatRoomWithTotalMessage = ChatRoomWithTotalMe
                 }
                 .padding(3.dp),
             border = BorderStroke(width = if (isInBound) 2.dp else 1.5.dp, color = bgColor),
-            colors = CardColors(contentColor = Color.Black, containerColor =MaterialTheme.colorScheme.background,
+            colors = CardColors(contentColor = Color.Black, containerColor = MaterialTheme.colorScheme.background,
                 disabledContainerColor = MaterialTheme.colorScheme.background,
                 disabledContentColor = MaterialTheme.colorScheme.background)) {
             Column() {
@@ -351,6 +364,58 @@ fun ChatItemDetails(chatRoomDetails: ChatRoomWithTotalMessage = ChatRoomWithTota
         HorizontalDivider(thickness = 1.dp)
     }
 
+}
+
+@Composable
+fun TitleWithCurvedEdgeBody(titleView: @Composable () -> Unit, bodyView: @Composable () -> Unit,
+    floatingActionButton: (@Composable () -> Unit)? = null) {
+    Scaffold(content = { paddingValues ->
+
+        ConstraintLayout(modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primary)) {
+            val (logoSection, detailsSection) = createRefs()
+            Column(verticalArrangement = Arrangement.Center, modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                    .constrainAs(logoSection)
+                    {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(detailsSection.top)
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    titleView.invoke()
+                }
+            }
+            Column(modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background,
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.9f)
+                    .constrainAs(detailsSection)
+                    {
+                        bottom.linkTo(parent.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+
+                    }, verticalArrangement = Arrangement.Top) {
+
+                bodyView.invoke()
+
+            }
+
+
+        }
+    }, floatingActionButton = {
+        floatingActionButton?.invoke()
+
+    })
 }
 
 

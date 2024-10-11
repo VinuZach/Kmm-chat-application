@@ -26,7 +26,7 @@
             android:label="@string/title_activity_authentication"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".MainActivity"
+            android:name=".chat.MainActivity"
             android:exported="true">
 
         </activity>

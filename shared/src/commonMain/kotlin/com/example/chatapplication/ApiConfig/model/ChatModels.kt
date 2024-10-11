@@ -7,3 +7,6 @@ data class UsersEmailsResponse(val success: Boolean=false,val userEmailList: Lis
 
 @Serializable
 data class ChatCreationOrUpdate(val room_name:String,val room_id:Int?,val chat_user_list:List<String>)
+
+@Serializable
+data class UserDetails(val userName:String)

@@ -1,4 +1,4 @@
-package com.example.chatapplication.android
+package com.example.chatapplication.android.chat
 
 import android.os.Bundle
 import android.util.Log
@@ -15,10 +15,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.example.chatapplication.android.chat.ChatGroupAndListingMain
-import com.example.chatapplication.android.chat.ChatScreen
-import com.example.chatapplication.android.chat.ChatViewModel
-import com.example.chatapplication.android.chat.RoomCreationOrUpdate
 import com.example.chatapplication.android.theme.ChatApplicationTheme
 import kotlinx.serialization.Serializable
 
@@ -28,7 +24,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ChatApplicationTheme(dynamicColor = true) {
+            ChatApplicationTheme() {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     MainChatPageView()
                 }
@@ -64,13 +60,18 @@ class MainActivity : ComponentActivity() {
             composable<NavigationChatRoomId> {
                 val chatRoomId = it.toRoute<NavigationChatRoomId>()
                 Log.d("asasdsadsad", "directChat: ")
-                ChatScreen(userName = chatViewModel.userName.value, viewModel = chatViewModel, roomId = chatRoomId.roomId, roomName = chatRoomId.roomName)
+                ChatScreen(userName = chatViewModel.userName.value, viewModel = chatViewModel,
+                    roomId = chatRoomId.roomId, roomName = chatRoomId.roomName, onBackPressed = {
+                        navController.popBackStack()
+                    })
 
             }
 
             composable<ChatCreationUpdate> {
                 val ChatCreationUpdate = it.toRoute<ChatCreationUpdate>()
-                RoomCreationOrUpdate(ChatCreationUpdate, chatViewModel)
+                RoomCreationOrUpdate(ChatCreationUpdate, chatViewModel, onBackPressed = {
+                    navController.popBackStack()
+                })
             }
 
 

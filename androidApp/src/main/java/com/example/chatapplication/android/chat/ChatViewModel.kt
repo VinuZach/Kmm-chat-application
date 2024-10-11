@@ -152,9 +152,9 @@ class ChatViewModel : ViewModel() {
 
 
 
-    fun retrieveUserEmailList(onResultObtained: (Boolean, Any) -> Unit) {
+    fun retrieveUserEmailList(currentUserName:String,onResultObtained: (Boolean, Any) -> Unit) {
         viewModelScope.launch {
-            apiHandler.retrieveAllUserEmails(object : (Boolean, Any) -> Unit {
+            apiHandler.retrieveAllUserEmails(currentUserName,object : (Boolean, Any) -> Unit {
                 override fun invoke(p1: Boolean, p2: Any) {
 
                     onResultObtained.invoke(p1, p2)
