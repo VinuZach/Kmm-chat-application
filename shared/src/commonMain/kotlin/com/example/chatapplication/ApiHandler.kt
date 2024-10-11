@@ -3,6 +3,7 @@ package com.example.chatapplication
 import com.example.chatapplication.ApiConfig.model.BaseResponse
 import com.example.chatapplication.ApiConfig.HttpEndPoints
 import com.example.chatapplication.ApiConfig.model.ChatCreationOrUpdate
+import com.example.chatapplication.ApiConfig.model.GroupCreationOrUpdate
 import com.example.chatapplication.ApiConfig.model.NewUserRegistrationRequest
 import com.example.chatapplication.ApiConfig.model.NewUserRegistrationResponse
 import com.example.chatapplication.ApiConfig.model.UserAuthenticationResponse
@@ -133,6 +134,30 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
                 method = HttpMethod.Post
 
                 setBody(ChatCreationOrUpdate(roomName, roomId, selectedUserForChat))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+        if (httpResponse?.status == HttpStatusCode.OK || httpResponse?.status == HttpStatusCode.Unauthorized)
+            result = httpResponse.body<BaseResponse>()
+        CoroutineScope(Dispatchers.Main).launch {
+            onResultObtained.invoke(result.success, result)
+        }
+
+    }
+
+
+    suspend fun createOrUpdateGroup(groupName: String, roomIds: List<Int>, onResultObtained: (Boolean, Any) -> Unit) {
+        var result = BaseResponse(success = false, message = "Server response not obtained")
+        val httpResponse: HttpResponse? = try {
+
+            apiCallManager.request {
+                contentType(ContentType.Application.Json)
+                url(HttpEndPoints.CreateOrUpdateChat.url)
+                method = HttpMethod.Post
+
+                setBody(GroupCreationOrUpdate(groupName, roomIds))
             }
         } catch (e: Exception) {
             e.printStackTrace()

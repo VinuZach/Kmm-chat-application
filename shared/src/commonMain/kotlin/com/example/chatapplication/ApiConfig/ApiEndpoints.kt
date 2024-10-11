@@ -10,4 +10,5 @@ sealed class HttpEndPoints(val url: String) {
     data object RegisterNewUser : HttpEndPoints("$BASE_URL/register_new_user")
     data object RetrieveAllUsersEmail : HttpEndPoints("$BASE_URL/retrieve_all_users")
     data object CreateOrUpdateChat :HttpEndPoints("$BASE_URL/create_update_chat")
+    data object CreateOrUpdateGroup :HttpEndPoints("$BASE_URL/create_update_group")
 }
