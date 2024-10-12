@@ -3,6 +3,8 @@ package com.example.chatapplication
 import com.example.chatapplication.ApiConfig.model.BaseResponse
 import com.example.chatapplication.ApiConfig.HttpEndPoints
 import com.example.chatapplication.ApiConfig.model.ChatCreationOrUpdate
+import com.example.chatapplication.ApiConfig.model.ChatListRequest
+import com.example.chatapplication.ApiConfig.model.ChatListResponse
 import com.example.chatapplication.ApiConfig.model.GroupCreationOrUpdate
 import com.example.chatapplication.ApiConfig.model.NewUserRegistrationRequest
 import com.example.chatapplication.ApiConfig.model.NewUserRegistrationResponse
@@ -98,6 +100,31 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
         }
     }
 
+    suspend fun retrieveChatList(currentUserName:String,blockAssignedChats: Boolean, onResultObtained: (Boolean, Any) -> Unit) {
+        var result = ChatListResponse(false)
+
+        val httpResponse: HttpResponse? = try {
+            apiCallManager.request {
+                contentType(ContentType.Application.Json)
+                setBody(ChatListRequest(currentUserName,blockAssignedChats))
+                url(HttpEndPoints.RetrieveAllChats.url)
+                method = HttpMethod.Post
+
+            }
+        } catch (e: Exception) {
+
+            e.printStackTrace()
+            null
+        }
+
+        if (httpResponse?.status == HttpStatusCode.OK || httpResponse?.status == HttpStatusCode.Unauthorized) result =
+            httpResponse.body<ChatListResponse>()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            onResultObtained.invoke(result.success, result)
+        }
+    }
+
 
     suspend fun createNewUser(userName: String, password: String, email: String,
         onResultObtained: (Boolean, Any) -> Unit) {
@@ -148,15 +175,14 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
     }
 
 
-    suspend fun createOrUpdateGroup(groupName: String, roomIds: List<Int>, onResultObtained: (Boolean, Any) -> Unit) {
+    suspend fun createOrUpdateGroup(groupName: String,groupId:Int?, roomIds: List<Int>, onResultObtained: (Boolean, Any) -> Unit) {
         var result = BaseResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
 
             apiCallManager.request {
                 contentType(ContentType.Application.Json)
-                url(HttpEndPoints.CreateOrUpdateChat.url)
+                url(HttpEndPoints.CreateOrUpdateGroup.url)
                 method = HttpMethod.Post
-
                 setBody(GroupCreationOrUpdate(groupName, roomIds))
             }
         } catch (e: Exception) {

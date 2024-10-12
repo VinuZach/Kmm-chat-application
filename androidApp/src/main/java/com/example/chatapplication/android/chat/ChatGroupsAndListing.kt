@@ -62,14 +62,15 @@ import kotlinx.coroutines.launch
 fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(),
     redirectToRoomById: (Int, String) -> Unit = { _, _ -> },
     redirectToRoomDetails: (Int?) -> Unit = { _ -> },
-    createNewChat: (Int, String?) -> Unit = { _, _ -> }) {
+    createNewChat: (Int, String?) -> Unit = { _, _ -> },
+    createNewGroup:(Int,String?) ->Unit ={_,_ ->}) {
 
     TitleWithCurvedEdgeBody(titleView = {
         Text(text = "side menu")
         Text(text = "Icon")
 
     }, bodyView = {
-        GroupListingAndChatView(viewModel, redirectToRoomById)
+        GroupListingAndChatView(viewModel, redirectToRoomById,createNewGroup)
     }, floatingActionButton = {
         FloatingActionButton(onClick = {
             createNewChat.invoke(-1, null)
@@ -79,63 +80,14 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(),
         }
 
     })
-//    Scaffold(content = { paddingValues ->
-//
-//        ConstraintLayout(modifier = Modifier
-//                .padding(paddingValues)
-//                .fillMaxSize()
-//                .background(MaterialTheme.colorScheme.primary)) {
-//            val (logoSection, detailsSection) = createRefs()
-//            Column(verticalArrangement = Arrangement.Center, modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(10.dp)
-//                    .constrainAs(logoSection)
-//                    {
-//                        top.linkTo(parent.top)
-//                        start.linkTo(parent.start)
-//                        end.linkTo(parent.end)
-//                        bottom.linkTo(detailsSection.top)
-//                    },
-//                horizontalAlignment = Alignment.CenterHorizontally) {
-//                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(10.dp)) {
-//                    Text(text = "side menu")
-//                    Text(text = "Icon")
-//                }
-//            }
-//            Column(modifier = Modifier
-//                    .background(MaterialTheme.colorScheme.background,
-//                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-//                    .fillMaxWidth()
-//
-//                    .constrainAs(detailsSection)
-//                    {
-//                        bottom.linkTo(parent.bottom)
-//                        start.linkTo(parent.start)
-//                        end.linkTo(parent.end)
-//
-//                    }, verticalArrangement = Arrangement.Top) {
-//
-//                GroupListingAndChatView(viewModel, redirectToRoomById, redirectToRoomDetails, createNewChat)
-//
-//            }
-//
-//
-//        }
-//    }, floatingActionButton = {
-//        FloatingActionButton(onClick = { }, containerColor = MaterialTheme.colorScheme.tertiary,
-//            shape = RoundedCornerShape(50.dp)) {
-//            Icon(imageVector = Icons.Filled.Add, contentDescription = "add new chat")
-//        }
-//    })
 
 
 }
 
 @Composable
 fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(),
-    redirectToRoomById: (Int, String) -> Unit = { _, _ -> }   ) {
+    redirectToRoomById: (Int, String) -> Unit = { _, _ -> },
+    createNewGroup:(Int,String?) ->Unit ={_,_ ->}) {
     Column(modifier = Modifier.fillMaxHeight(0.9f)) {
 
         val selectedGroupName = remember {
@@ -231,9 +183,9 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(),
                     horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
                     item {
                         Button(modifier = Modifier.padding(end = 5.dp), onClick = {
-
+                            createNewGroup.invoke(-1,null)
                         }) {
-                            Icon(imageVector = Icons.Filled.Add, contentDescription = "add new groupd")
+                            Icon(imageVector = Icons.Filled.Add, contentDescription = "add new group")
                         }
                     }
                     items(items = viewModel.state.value.groupDetailsList.clusterRoomGroups)
@@ -247,6 +199,10 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(),
                     Row(verticalAlignment = Alignment.Top,
                         modifier = Modifier
                                 .fillMaxWidth()
+                                .clickable {
+                                    selectedGroupName.value = null
+                                    retrieveChatOfGroup.invoke(-1, null)
+                                }
                                 .background(
                                     MaterialTheme.colorScheme.primary,
                                 )
@@ -254,10 +210,7 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(),
                     ) {
                         Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = "back",
                             modifier = Modifier
-                                    .clickable {
-                                        selectedGroupName.value = null
-                                        retrieveChatOfGroup.invoke(-1, null)
-                                    }
+
                                     .padding(5.dp), tint = Color.White)
                         Text(text = it, modifier = Modifier.padding(start = 5.dp),
                             fontFamily = MaterialTheme.typography.titleLarge.fontFamily,

@@ -47,6 +47,7 @@ class MainActivity : ComponentActivity() {
 //        }
         NavHost(navController = navController, startDestination = "group_and_chat_listing") {
             composable("group_and_chat_listing") {
+
                 ChatGroupAndListingMain(viewModel = chatViewModel, redirectToRoomById = { roomId, roomName ->
                     navController.navigate(NavigationChatRoomId(roomId, roomName))
                 }, redirectToRoomDetails = {
@@ -54,7 +55,11 @@ class MainActivity : ComponentActivity() {
                 }, createNewChat =
                 { roomId, roomName ->
                     navController.navigate(ChatCreationUpdate(roomId, roomName))
-                })
+                }, createNewGroup =
+                { groupId, groupName ->
+                    navController.navigate(GroupCreationUpdate(groupId, groupName))
+                }
+                )
 
             }
             composable<NavigationChatRoomId> {
@@ -68,10 +73,16 @@ class MainActivity : ComponentActivity() {
             }
 
             composable<ChatCreationUpdate> {
-                val ChatCreationUpdate = it.toRoute<ChatCreationUpdate>()
-                RoomCreationOrUpdate(ChatCreationUpdate, chatViewModel, onBackPressed = {
+                val chatCreationUpdate = it.toRoute<ChatCreationUpdate>()
+                RoomCreationOrUpdate(chatCreationUpdate, chatViewModel, onBackPressed = {
                     navController.popBackStack()
                 })
+            }
+            composable<GroupCreationUpdate> {
+                val groupCreationUpdate = it.toRoute<GroupCreationUpdate>()
+                GroupCreationOrUpdate(groupCreationUpdate, chatViewModel) {
+                    navController.popBackStack()
+                }
             }
 
 
@@ -83,5 +94,9 @@ class MainActivity : ComponentActivity() {
 @Serializable
 data class NavigationChatRoomId(val roomId: Int, val roomName: String)
 
+
 @Serializable
 data class ChatCreationUpdate(val roomId: Int = -1, val roomName: String?)
+
+@Serializable
+data class GroupCreationUpdate(val groupId: Int = -1, val groupName: String?)

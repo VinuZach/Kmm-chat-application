@@ -7,6 +7,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatapplication.ApiConfig.model.ChatListResponseData
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatSocketService
 import com.example.chatapplication.ApiConfig.websocketConfig.ChatType
 import com.example.chatapplication.ApiConfig.websocketConfig.Resource
@@ -165,10 +166,31 @@ class ChatViewModel : ViewModel() {
         }
     }
 
+    fun retrieveChatList(currentUserName:String,blockAssignedChats: Boolean, onResultObtained: (Boolean, Any) -> Unit) {
+        viewModelScope.launch {
+            apiHandler.retrieveChatList(currentUserName,blockAssignedChats,object : (Boolean, Any) -> Unit {
+                override fun invoke(p1: Boolean, p2: Any) {
+
+                    onResultObtained.invoke(p1, p2)
+
+                }
+
+            })
+        }
+    }
+
     fun createOrUpdateChat(roomName: String, roomID: Int?, selectedUserForChat: List<String>,
         onResultObtained: (Boolean, Any) -> Unit) {
         viewModelScope.launch {
             apiHandler.createOrUpdateChat(roomName, roomID, selectedUserForChat, onResultObtained)
+        }
+
+    }
+
+    fun createOrUpdateGroup(groupName: String, groupId: Int?, selectedChatList: List<ChatListResponseData>,
+        onResultObtained: (Boolean, Any) -> Unit) {
+        viewModelScope.launch {
+            apiHandler.createOrUpdateGroup(groupName, groupId, selectedChatList.map { it.id }, onResultObtained)
         }
 
     }
