@@ -2,7 +2,6 @@ package com.example.chatapplication.android.theme
 
 import android.app.Activity
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -32,8 +31,8 @@ private val LightColorScheme = lightColorScheme(primary = Primary_Color, seconda
     */)
 
 @Composable
-fun ChatApplicationTheme(darkTheme: Boolean = false,//isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, content: @Composable () -> Unit)
+fun ChatApplicationTheme(darkTheme: Boolean = true,//isSystemInDarkTheme(),
+    dynamicColor: Boolean = true, content: @Composable () -> Unit)
 {
     val colorScheme = when
     {

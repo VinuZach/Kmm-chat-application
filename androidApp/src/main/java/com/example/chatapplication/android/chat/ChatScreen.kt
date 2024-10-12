@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -118,7 +119,7 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
                             val isOwnMessage = sendUserMessage == currentUser
 
                             val color =
-                                if (isOwnMessage) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                                if (!isOwnMessage) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
 
 
                             Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
@@ -294,7 +295,7 @@ fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHi
             Modifier.padding(start = 18.dp, bottom = 15.dp)
     } else Modifier.padding(10.dp)
     Column(modifier = modifier
-            .width(200.dp)
+            .defaultMinSize(200.dp)
 
 //                                        .drawBehind {
 //                                            val cornerRadius = 10.dp.toPx()

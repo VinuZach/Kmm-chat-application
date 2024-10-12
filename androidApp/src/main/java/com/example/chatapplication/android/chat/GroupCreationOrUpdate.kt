@@ -152,7 +152,7 @@ fun GroupCreationOrUpdate(
                     } else {
                         if (confirmationView.value) {
                             if (createGroupName.value.isEmpty()) {
-                                Toast.makeText(context, "Conversation Name required", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Group Name required", Toast.LENGTH_SHORT).show()
                                 return@FloatingActionButton
                             } else
                                 callCreateGroupApi(viewModel, groupName = createGroupName.value,
