@@ -12,43 +12,45 @@ struct ContentView: View {
     @State var showDialog: Bool = false
 
     var body: some View {
-        NavigationStack(path: $viewModel.navigationPath) {
+    
+        NavigationStack {
             groupListingView
-
-                .navigationDestination(for: ChatRoomWithTotalMessage.self) { destination in
-
-                   let  _ = print(destination)
-
-                    VStack {
-                        HStack {
-                            Text(destination.roomName)
-                        }
-                        List {
-                            ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
-                                Text(messageItem.message)
-                                    .padding(10)
-                                    .rotationEffect(.radians(.pi))
-                                    .scaleEffect(x: -1, y: 1, anchor: .center)
-                            }
-                        }.rotationEffect(.radians(.pi))
-                            .scaleEffect(x: -1, y: 1, anchor: .center)
-                        HStack {
-                            TextField("type message", text: $viewModel.sendMessageData)
-                                .keyboardType(.asciiCapable)
-                            Button("send") {
-                                let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "aaa@aaa.com", pageNumber: 1, blocked_user: [String]())
-                                viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
-                            }
-                        }.padding(.horizontal, 30)
-                    }
-                    .onAppear(perform: {
-                        viewModel.initChatRoomSocketConnection(roomId: destination.roomID!)
-                    })
-                }
+                
+//                .navigationDestination(for: ChatRoomWithTotalMessage.self) { destination in
+//
+//                   let  _ = print(destination)
+//
+//                    VStack {
+//                        HStack {
+//                            Text(destination.roomName)
+//                        }
+//                        List {
+//                            ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
+//                                Text(messageItem.message)
+//                                    .padding(10)
+//                                    .rotationEffect(.radians(.pi))
+//                                    .scaleEffect(x: -1, y: 1, anchor: .center)
+//                            }
+//                        }.rotationEffect(.radians(.pi))
+//                            .scaleEffect(x: -1, y: 1, anchor: .center)
+//                        HStack {
+//                            TextField("type message", text: $viewModel.sendMessageData)
+//                                .keyboardType(.asciiCapable)
+//                            Button("send") {
+//                                let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "aaa@aaa.com", pageNumber: 1, blocked_user: [String]())
+//                                viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
+//                            }
+//                        }.padding(.horizontal, 30)
+//                    }
+//                    .onAppear(perform: {
+//                        viewModel.initChatRoomSocketConnection(roomId: destination.roomID!)
+//                    })
+//                }
         }
     }
-
+    @State  var redirectToChat: Bool = false
     var groupListingView: some View {
+       
         VStack {
             let groupDetailsList = viewModel.groupListingWithChat?.clusterRoomGroups ?? [ChatRoomWithTotalMessage]()
 
@@ -122,12 +124,46 @@ struct ContentView: View {
             List(chatMessageList, id: \.roomID) {
                 chatMessageDetails in
                 let chatDetails = ChatItemDetails(roomId: chatMessageDetails.roomID as! Int, roomName: chatMessageDetails.roomName, clusterGroupId: chatMessageDetails.clusterGroupId, totalMessage: chatMessageDetails.totalMessages, roomCountUnderGroup: chatMessageDetails.roomCountUnderGroup)
-
+                
                 Text(chatMessageDetails.roomName)
-
+                
                     .onTapGesture {
-                        viewModel.navigationPath.append(chatMessageDetails)
+                        print("asdsad")
+                        //viewModel.navigationPath.append(chatMessageDetails)
+                        redirectToChat.toggle()
                     }.draggable(chatDetails)
+                    .navigationDestination(isPresented:$redirectToChat) {
+                        
+                        let  _ = print(chatMessageDetails)
+                        
+                        VStack {
+                            HStack {
+                                Text(chatMessageDetails.roomName)
+                            }
+                            List {
+                                ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
+                                    Text(messageItem.message)
+                                        .padding(10)
+                                        .rotationEffect(.radians(.pi))
+                                        .scaleEffect(x: -1, y: 1, anchor: .center)
+                                }
+                            }.rotationEffect(.radians(.pi))
+                                .scaleEffect(x: -1, y: 1, anchor: .center)
+                            HStack {
+                                TextField("type message", text: $viewModel.sendMessageData)
+                                    .keyboardType(.asciiCapable)
+                                Button("send") {
+                                    let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "aaa@aaa.com", pageNumber: 1, blocked_user: [String]())
+                                    viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
+                                }
+                            }.padding(.horizontal, 30)
+                        }
+                        .onAppear(perform: {
+                            viewModel.initChatRoomSocketConnection(roomId: chatMessageDetails.roomID!)
+                        })
+                    
+            
+                    }
             }
         }
         .onAppear(perform: {
@@ -226,7 +262,7 @@ extension ContentView {
         
         func initSocketConnection(webSocketLink:String,isForChat:Bool, onConnected: @escaping()->())  {
             DispatchQueue.main.async { [self] in
-                webSocket.doInitSession(roomId: webSocketLink,completionHandler:
+                webSocket.doInitSession(roomId: webSocketLink,currentUserName: "",completionHandler:
                                             { [self] resource,error in
                     
                     self.isWebSocketConnect = (resource is ResourceSuccess)

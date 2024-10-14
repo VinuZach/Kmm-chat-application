@@ -7,6 +7,23 @@
 //
 
 import Foundation
+import SwiftUI
 
-let JURA_BOLD="Jura-Bold"
-let IRINA_SANS_REGULAR="InriaSans-Regular"
+extension Font
+{
+    static let family=FontFamily()
+    static let size=FontSize()
+}
+struct FontFamily
+{
+    let JURA_BOLD="Jura-Bold"
+    let IRINA_SANS_REGULAR="InriaSans-Regular"
+}
+struct FontSize
+{
+    let body_font_size:CGFloat=18
+    let title_large_font_size:CGFloat=30
+    let small:CGFloat=15
+}
+
+

@@ -73,7 +73,8 @@ fun UserAuthenticationFullPage(authenticateViewModel: AuthenticationViewModel = 
             Text(text = "asdad")
         }
         Column(modifier = Modifier
-                .background(MaterialTheme.colorScheme.background, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .background(MaterialTheme.colorScheme.background,
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 .fillMaxWidth()
                 .padding(5.dp)
                 .constrainAs(detailsSection)

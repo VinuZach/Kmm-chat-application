@@ -15,6 +15,7 @@
 		2A9E26542CB55BB700F4A4F9 /* InriaSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2A9E26532CB55BB700F4A4F9 /* InriaSans-Regular.ttf */; };
 		2A9E26562CB55BC800F4A4F9 /* Jura-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2A9E26552CB55BC800F4A4F9 /* Jura-Bold.ttf */; };
 		2A9E26582CB55DFE00F4A4F9 /* Font_Constant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A9E26572CB55DFE00F4A4F9 /* Font_Constant.swift */; };
+		2AE1C05D2CBBE584009F1943 /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE1C05C2CBBE584009F1943 /* Color.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
@@ -39,6 +40,7 @@
 		2A9E26532CB55BB700F4A4F9 /* InriaSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InriaSans-Regular.ttf"; sourceTree = "<group>"; };
 		2A9E26552CB55BC800F4A4F9 /* Jura-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Jura-Bold.ttf"; sourceTree = "<group>"; };
 		2A9E26572CB55DFE00F4A4F9 /* Font_Constant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Font_Constant.swift; sourceTree = "<group>"; };
+		2AE1C05C2CBBE584009F1943 /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -82,6 +84,14 @@
 			path = Font;
 			sourceTree = "<group>";
 		};
+		2AE1C05B2CBBE56A009F1943 /* Extension */ = {
+			isa = PBXGroup;
+			children = (
+				2AE1C05C2CBBE584009F1943 /* Color.swift */,
+			);
+			path = Extension;
+			sourceTree = "<group>";
+		};
 		7555FF72242A565900829871 = {
 			isa = PBXGroup;
 			children = (
@@ -102,6 +112,7 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				2AE1C05B2CBBE56A009F1943 /* Extension */,
 				2A9E26522CB55B8800F4A4F9 /* Font */,
 				2A8C9BA82C05BA1900991113 /* Authentication */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
@@ -223,6 +234,7 @@
 				2A8C9BAA2C05BA3E00991113 /* UserAuthentication.swift in Sources */,
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				2A9E26582CB55DFE00F4A4F9 /* Font_Constant.swift in Sources */,
+				2AE1C05D2CBBE584009F1943 /* Color.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

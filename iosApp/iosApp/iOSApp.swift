@@ -7,6 +7,7 @@ struct iOSApp: App {
 		WindowGroup {
 			
             UserAuthentication(viewModel: UserAuthentication.ViewModel())
+            //ContentView(viewModel: ContentView.ViewModel())
 
 		}
 	}

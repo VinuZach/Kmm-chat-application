@@ -12,139 +12,191 @@ import shared
 
 
 struct UserAuthentication: View {
-    
+  
     @ObservedObject private(set) var viewModel: ViewModel
     private let toastOptions = SimpleToastOptions(alignment: .top,
                                                   hideAfter: 2,
-                                        
                                                   animation: .default,
                                                   modifierType: .slide
     )
-
+    
+    
+    var body: some View {
+       
+        NavigationStack
+        {
+            VStack
+            {
+                Text("Logo")
+                    .frame(minHeight: 150)
+                LoginView(viewModel: viewModel)
+                .simpleToast(isPresented: $viewModel.showToast, options: toastOptions) {
+                    HStack()
+                    {
+                        Text(viewModel.toastMessage)
+                    }.padding(.top,100)
+                }
+                
+                
+            }
+            .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .bottom )
+            .background(Color.theme.primary_color)
+        }
+        
+    }
+    
     struct LoginView:View {
+        @State private var isLoggedIn: Bool = false
+        @ObservedObject  var viewModel:UserAuthentication.ViewModel
+        init(@ObservedObject viewModel:UserAuthentication.ViewModel )
+        {
+            self.viewModel=viewModel
+        }
         var body: some View
         {
             VStack
             {
-                Text("asdasd")
-            }.background(.blue)
-        }
-    }
-    
-    var body: some View {
-      
-        NavigationStack(path: $viewModel.navigationPath)
-        {
-            VStack
-            {
-                VStack
+                Text("Welcome")
+                    .padding(.vertical,20)
+                    .frame(maxWidth: .infinity,alignment: .leading)
+                    .font(.custom(Font.family.JURA_BOLD
+                                  , size: Font.size.title_large_font_size))
+                if(!viewModel.isUserLoginView)
                 {
-                    Text("asdasdasd")
-                }
-            
-                .background(Color(.white))
+                    TextField("Email",text: $viewModel.email) .padding(15)
+                        .background(Color.theme.textField_background)
+                        .textInputAutocapitalization(.never)
+                        .font(.custom(Font.family.IRINA_SANS_REGULAR,size: Font.size.body_font_size))
                     
-                LoginView().frame(width: .infinity)
+                }
+                TextField("Username",text: $viewModel.username)
+                    .padding(15)
+                    .textInputAutocapitalization(.never)
+                    .background(Color.theme.textField_background)
+                    .font(.custom(Font.family.IRINA_SANS_REGULAR,size: Font.size.body_font_size))
+               HStack
+                {
+                    ZStack
+                    {
+                        if(viewModel.isSecured)
+                        {
+                            SecureField("Password",text: $viewModel.password)
+                                .padding(15)
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.asciiCapable)
+                                .background(Color.theme.textField_background)
+                                .font(.custom(Font.family.IRINA_SANS_REGULAR,size: Font.size.body_font_size))
+                        }
+                    else
+                        {
+                        TextField("Password",text: $viewModel.password)
+                            .padding(15)
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.asciiCapable)
+                            .background(Color.theme.textField_background)
+                            .font(.custom(Font.family.IRINA_SANS_REGULAR,size: Font.size.body_font_size))
+                    }
+                    }
+                    Button(action: {
+                        self.viewModel.isSecured.toggle()
+                               }) {
+                                   Image(systemName: self.viewModel.isSecured ? "eye.slash" : "eye")
+                                       .accentColor(.gray)
+                               }.padding(8)
+                }.background(Color.theme.textField_background)
+                Spacer()
+                Button(action: {
+                    isLoggedIn = true
+                    callCorrespondingApiCall(viewModel: self.viewModel)
+                }, label: {
+                    Text("Login")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical,10)
+                        .foregroundColor(Color.theme.backgroundColor)
+                        .background(Color.theme.primary_color.cornerRadius(60))
+                })
+                .padding(30)
+                // Navigate to the next view based on the login state
+                .navigationDestination(isPresented:$isLoggedIn) {
+                  ContentView(viewModel: ContentView.ViewModel())
+                        .navigationBarBackButtonHidden()
+                }
+                let buttonText:String =  if(viewModel.isUserLoginView)
+                {
+                    "Register a new account "
+                }
+                else
+                { "Login with existing account"}
+                
+                Text(buttonText).font(.custom(Font.family.IRINA_SANS_REGULAR, size: Font.size.small))
+                    .foregroundColor(Color.theme.accent_color)
+                    .underline()
+                    .onTapGesture {
+                        viewModel.isUserLoginView.toggle()
+                }
             }
-            .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .bottom )
-            .background(Color.red)
+            .padding(30)
+            .frame(maxWidth: .infinity)
+            .background(Color.theme.backgroundColor.cornerRadius(20).ignoresSafeArea(edges: .bottom))
+        }
+        
+        func callCorrespondingApiCall(@ObservedObject viewModel:UserAuthentication.ViewModel)
+        {
           
-//            VStack(alignment: .center, spacing: 8)
+//       if(viewModel.isUserLoginView)
+//       {
+//           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).verifyUserDetails(userName:viewModel.username, password: viewModel.password) { (isSuccess, result) in
+//
+//               let res=result as! UserAuthenticationResponse
+//               if(!res.success)
 //               {
-//                   
-//                   if(!viewModel.isUserLoginView)
-//                   {
-//                       TextField("Email",text: $viewModel.email)  .padding(10)
-//                           .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.gray, lineWidth: 2))
-//                   }
-//                   TextField("Username",text: $viewModel.username)  .padding(10)
-//                       .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.gray, lineWidth: 2))
-//                   
-//                   TextField("Password",text: $viewModel.password).padding(10)
-//                       .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.gray, lineWidth: 2))
-//
-//                   
-//                   Text("Forgot Password").font(.custom("reset passord", size: 12)).frame(maxWidth: .infinity,alignment:.trailing)
-//               
-//                   Button(action: {
-//                       print(viewModel.isUserLoginView)
-//                  
-//                       if(viewModel.isUserLoginView)
-//                       {
-//                           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).verifyUserDetails(userName:viewModel.username, password: viewModel.password) { (isSuccess, result) in
-//                               
-//                               let res=result as! UserAuthenticationResponse
-//                               if(!res.success)
-//                               {
-//                                   viewModel.toastMessage=res.message!
-//                                   viewModel.showToast=true
-//                               }
-//                               else
-//                               {
-//                                   viewModel.toastMessage="Login successfull"
-//                                   viewModel.showToast=true
-//                                   viewModel.navigationPath.removeAll()
-//                                   viewModel.navigationPath.append("aaaa")
-//                               }
-//                               
-//                               
-//                           } completionHandler: { err in
-//                               print("cccc")
-//                           }
-//                       }else
-//                       {
-//                           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).createNewUser(userName: viewModel.username, password: viewModel.password, email: viewModel.email, onResultObtained: {
-//                               (isSuccess,result) in
-//                               
-//                               let res=result as! NewUserRegistrationResponse
-//                               if(!res.success)
-//                               {
-//                                   viewModel.toastMessage=res.message!
-//                                   viewModel.showToast=true
-//                               }
-//                               else
-//                               {
-//                                   viewModel.toastMessage="Login successfull"
-//                                   viewModel.showToast=true
-//                                   viewModel.navigationPath.removeAll()
-//                                   viewModel.navigationPath.append("aaaa")
-//                               }
-//                           }, completionHandler: {
-//                               error in
-//                           })
-//                       }
-//
-//                       
-//                       
-//
-//                   }, label: {
-//                       Text("Submit").padding(.vertical,10).frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/)
-//                   }).buttonStyle(.borderedProminent).padding(.top,40)
-//                       .navigationDestination(for: String.self)
-//                                   {
-//                                       path in
-//                                       ContentView(viewModel: ContentView.ViewModel())
-//                                   }
-//                                   .navigationBarBackButtonHidden(true)
-//                   Text("create new account").onTapGesture {
-//                       viewModel.isUserLoginView.toggle()
-//                   }
-//               }.padding(20).simpleToast(isPresented: $viewModel.showToast, options: toastOptions) {
-//                   HStack()
-//                   {
-//                       Text(viewModel.toastMessage)
-//                   }
+//                   viewModel.toastMessage=res.message!
+//                   viewModel.showToast=true
 //               }
-
-            
+//               else
+//               {
+//                   viewModel.toastMessage="Login successfull"
+//                   viewModel.showToast=true
+//                   viewModel.navigationPath.removeAll()
+//                   viewModel.navigationPath.append("aaaa")
+//               }
+//
+//
+//           } completionHandler: { err in
+//               print("cccc")
+//           }
+//       }else
+//       {
+//           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).createNewUser(userName: viewModel.username, password: viewModel.password, email: viewModel.email, onResultObtained: {
+//               (isSuccess,result) in
+//
+//               let res=result as! NewUserRegistrationResponse
+//               if(!res.success)
+//               {
+//                   viewModel.toastMessage=res.message!
+//                   viewModel.showToast=true
+//               }
+//               else
+//               {
+//                   viewModel.toastMessage="Login successfull"
+//                   viewModel.showToast=true
+//                   viewModel.navigationPath.removeAll()
+//                   viewModel.navigationPath.append("aaaa")
+//               }
+//           }, completionHandler: {
+//               error in
+//           })
+//       }
         }
     }
+   
+    
 }
 
 
 #Preview {
     UserAuthentication(viewModel: UserAuthentication.ViewModel())
-
+    
 }
 
 extension UserAuthentication {
@@ -156,8 +208,10 @@ extension UserAuthentication {
         @Published var showToast=false
         @Published var isUserLoginView=true
         @Published var navigationPath = [String]()
+     
+        @Published  var isSecured: Bool = true
         init() {
-        
+            
         }
     }
 }
