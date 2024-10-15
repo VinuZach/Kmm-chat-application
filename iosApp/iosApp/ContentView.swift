@@ -10,67 +10,67 @@ extension UTType
 struct ContentView: View {
     @ObservedObject private(set) var viewModel: ViewModel
     @State var showDialog: Bool = false
-
+    @State  var redirectToChat: Bool = false
     var body: some View {
-    
-        NavigationStack {
-            groupListingView
-                
-//                .navigationDestination(for: ChatRoomWithTotalMessage.self) { destination in
-//
-//                   let  _ = print(destination)
-//
-//                    VStack {
-//                        HStack {
-//                            Text(destination.roomName)
-//                        }
-//                        List {
-//                            ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
-//                                Text(messageItem.message)
-//                                    .padding(10)
-//                                    .rotationEffect(.radians(.pi))
-//                                    .scaleEffect(x: -1, y: 1, anchor: .center)
-//                            }
-//                        }.rotationEffect(.radians(.pi))
-//                            .scaleEffect(x: -1, y: 1, anchor: .center)
-//                        HStack {
-//                            TextField("type message", text: $viewModel.sendMessageData)
-//                                .keyboardType(.asciiCapable)
-//                            Button("send") {
-//                                let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "aaa@aaa.com", pageNumber: 1, blocked_user: [String]())
-//                                viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
-//                            }
-//                        }.padding(.horizontal, 30)
-//                    }
-//                    .onAppear(perform: {
-//                        viewModel.initChatRoomSocketConnection(roomId: destination.roomID!)
-//                    })
-//                }
+        
+        //        NavigationStack {
+        //            groupListingView
+        //        }
+        
+        NavigationStack
+        {
+            VStack
+            {
+                Text("Logo")
+                    .frame(minHeight: 150)
+                ChatGroupAndListingMain
+            }
+            .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .bottom )
+            .background(Color.theme.primary_color)
         }
     }
-    @State  var redirectToChat: Bool = false
-    var groupListingView: some View {
-       
-        VStack {
+    
+    var ChatGroupAndListingMain :some View
+    {
+        
+        return VStack{
             let groupDetailsList = viewModel.groupListingWithChat?.clusterRoomGroups ?? [ChatRoomWithTotalMessage]()
-
-            ScrollView {
-                LazyHStack {
+            ScrollView(.horizontal) {
+                HStack
+                {
+                    Section {
+                        Button("+") {
+                            print("asdasd")
+                        } .padding(.horizontal,40)
+                            .padding(.vertical,8)
+                            .foregroundColor(Color.theme.textField_background)
+                            .background(Color.theme.primary_color.cornerRadius(20))
+                    }
                     ForEach(groupDetailsList, id: \.clusterGroupId) {
                         groupDetails in
+                        
+                        @State var isTargetted: Bool = false
+                        
                         Text(groupDetails.roomName)
-                            .overlay(RoundedRectangle(cornerRadius: 5)
-                                .stroke(.gray, lineWidth: 1))
+                            .padding(.horizontal,30)
+                            .padding(.vertical,7)
+                            .overlay(
+                                
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.theme.primary_color)
+                            )
+                        
                             .onTapGesture {
                                 viewModel.retrieveGroupDetails(groupDetails: groupDetails)
                             }
+                        
                             .dropDestination(for: ChatItemDetails.self) { droppedRoomDetailList, location in
-
+                                
                                 viewModel.reassignRoomToGroup = ReassignRoomToGroup(selectedRoom: droppedRoomDetailList.first!, selectedGroup: groupDetails)
                                 print(groupDetails)
                                 showDialog = true
                                 return false
-
+                                
                             }.alert(isPresented: $showDialog, content: {
                                 let selectedRoom = viewModel.reassignRoomToGroup!.selectedRoom
                                 let selectedGroup = viewModel.reassignRoomToGroup!.selectedGroup
@@ -79,7 +79,7 @@ struct ContentView: View {
                                 } else {
                                     "Assign room to " + selectedGroup.roomName
                                 }
-
+                                
                                 let message = if (selectedRoom.clusterGroupId) != "None" {
                                     if selectedGroup.roomCountUnderGroup - 1 == 0 {
                                         "Group will be deleted ..Reassign room?"
@@ -92,22 +92,136 @@ struct ContentView: View {
                                 return Alert(title: Text(title),
                                              message: Text(message),
                                              primaryButton: .default(Text("Confirm")) {
-                                                 viewModel.assignRoomToSelectedGroup(groupID: selectedGroup.clusterGroupId!,
-                                                                                     roomId: Int32(selectedRoom.roomId))
-                                                 viewModel.reassignRoomToGroup = nil
-                                             },
+                                    viewModel.assignRoomToSelectedGroup(groupID: selectedGroup.clusterGroupId!,
+                                                                        roomId: Int32(selectedRoom.roomId))
+                                    viewModel.reassignRoomToGroup = nil
+                                },
                                              secondaryButton: .cancel())
                             })
                     }
-
+                }
+                
+                
+                .padding()
+            }
+            
+            let chatMessageList = viewModel.groupListingWithChat?.chatRoomWithTotalMessage ??
+            [ChatRoomWithTotalMessage]()
+            
+            if viewModel.selectedRoomGroup != nil {
+                ZStack {
+                    HStack {
+                        Image(systemName: "chevron.backward")
+                            .padding(.horizontal, 20)
+                        Text(viewModel.selectedRoomGroup!.roomName)
+                        Spacer()
+                    }
+                    .padding(.vertical,20)
+                    .foregroundColor(.white)
+                    .background(Color.theme.primary_color)
+                    .onTapGesture {
+                        viewModel.retrieveGroupDetails(groupDetails: nil)
+                    }
+                    
+                    .padding(.vertical, 10)
+                }
+            }
+            List(chatMessageList, id: \.roomID) {
+                chatMessageDetails in
+                let chatDetails = ChatItemDetails(roomId: chatMessageDetails.roomID as! Int, roomName: chatMessageDetails.roomName, clusterGroupId: chatMessageDetails.clusterGroupId, totalMessage: chatMessageDetails.totalMessages, roomCountUnderGroup: chatMessageDetails.roomCountUnderGroup)
+                HStack
+                {
+                    Text("")
+                    Text(chatMessageDetails.roomName)
+                        .padding(8)
+                    
+                        .bold()
+                        .frame(maxWidth: .infinity,alignment: .leading)
+                        .foregroundColor(Color.theme.secondary_color)
+                        .font(.custom(Font.family.JURA_BOLD, size: 20))
+                        .onTapGesture {
+                            
+                            redirectToChat.toggle()
+                        }.draggable(chatDetails)
+                    
+                }
+                .listRowBackground(Color.clear)
+                .padding(EdgeInsets(top: 0, leading: -20, bottom: 0, trailing: -20))
+            }
+            .listSectionSeparator(.hidden, edges: .bottom)
+            .listStyle(PlainListStyle())
+            .navigationDestination(isPresented:$redirectToChat) {
+                Text("ccc")
+            }
+            
+        }
+        .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .top )
+        .background(Color.theme.backgroundColor.cornerRadius(20).ignoresSafeArea(edges: .bottom))
+        .onAppear(perform: {
+            print("group appear ")
+            viewModel.initGroupListingSocketConnection()
+        })
+    }
+    
+    var groupListingView: some View {
+        
+        VStack {
+            let groupDetailsList = viewModel.groupListingWithChat?.clusterRoomGroups ?? [ChatRoomWithTotalMessage]()
+            
+            ScrollView {
+                LazyHStack {
+                    ForEach(groupDetailsList, id: \.clusterGroupId) {
+                        groupDetails in
+                        Text(groupDetails.roomName)
+                            .overlay(RoundedRectangle(cornerRadius: 5)
+                                .stroke(.gray, lineWidth: 1))
+                            .onTapGesture {
+                                viewModel.retrieveGroupDetails(groupDetails: groupDetails)
+                            }
+                            .dropDestination(for: ChatItemDetails.self) { droppedRoomDetailList, location in
+                                
+                                viewModel.reassignRoomToGroup = ReassignRoomToGroup(selectedRoom: droppedRoomDetailList.first!, selectedGroup: groupDetails)
+                                print(groupDetails)
+                                showDialog = true
+                                return false
+                                
+                            }.alert(isPresented: $showDialog, content: {
+                                let selectedRoom = viewModel.reassignRoomToGroup!.selectedRoom
+                                let selectedGroup = viewModel.reassignRoomToGroup!.selectedGroup
+                                let title = if (selectedRoom.clusterGroupId) != "None" {
+                                    "Reassign to " + selectedGroup.roomName
+                                } else {
+                                    "Assign room to " + selectedGroup.roomName
+                                }
+                                
+                                let message = if (selectedRoom.clusterGroupId) != "None" {
+                                    if selectedGroup.roomCountUnderGroup - 1 == 0 {
+                                        "Group will be deleted ..Reassign room?"
+                                    } else {
+                                        "Reassign group?"
+                                    }
+                                } else {
+                                    "Assign room to group"
+                                }
+                                return Alert(title: Text(title),
+                                             message: Text(message),
+                                             primaryButton: .default(Text("Confirm")) {
+                                    viewModel.assignRoomToSelectedGroup(groupID: selectedGroup.clusterGroupId!,
+                                                                        roomId: Int32(selectedRoom.roomId))
+                                    viewModel.reassignRoomToGroup = nil
+                                },
+                                             secondaryButton: .cancel())
+                            })
+                    }
+                    
                     .listStyle(.plain)
                 }
-
+                
             }.frame(maxWidth: .infinity)
                 .background(.red)
             let chatMessageList = viewModel.groupListingWithChat?.chatRoomWithTotalMessage ??
-                [ChatRoomWithTotalMessage]()
-
+            [ChatRoomWithTotalMessage]()
+            
             if viewModel.selectedRoomGroup != nil {
                 ZStack {
                     HStack {
@@ -123,7 +237,7 @@ struct ContentView: View {
             }
             List(chatMessageList, id: \.roomID) {
                 chatMessageDetails in
-                let chatDetails = ChatItemDetails(roomId: chatMessageDetails.roomID as! Int, roomName: chatMessageDetails.roomName, clusterGroupId: chatMessageDetails.clusterGroupId, totalMessage: chatMessageDetails.totalMessages, roomCountUnderGroup: chatMessageDetails.roomCountUnderGroup)
+                let chatDetails = ChatItemDetails(roomId: chatMessageDetails.roomID as! Int, roomName: chatMessageDetails.roomName, clusterGroupId: chatMessageDetails.clusterGroupId, totalMessage: chatMessageDetails.totalMessages, roomCountUnderGroup: chatMessageDetails.roomCountUnderGroup)
                 
                 Text(chatMessageDetails.roomName)
                 
@@ -137,9 +251,9 @@ struct ContentView: View {
                         let  _ = print(chatMessageDetails)
                         
                         VStack {
-                            HStack {
-                                Text(chatMessageDetails.roomName)
-                            }
+                            //                            HStack {
+                            //                                Text(chatMessageDetails.roomName)
+                            //                            }
                             List {
                                 ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
                                     Text(messageItem.message)
@@ -153,7 +267,7 @@ struct ContentView: View {
                                 TextField("type message", text: $viewModel.sendMessageData)
                                     .keyboardType(.asciiCapable)
                                 Button("send") {
-                                    let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "aaa@aaa.com", pageNumber: 1, blocked_user: [String]())
+                                    let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "bbb@bbb.com", pageNumber: 1, blocked_user: [String]())
                                     viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
                                 }
                             }.padding(.horizontal, 30)
@@ -161,8 +275,8 @@ struct ContentView: View {
                         .onAppear(perform: {
                             viewModel.initChatRoomSocketConnection(roomId: chatMessageDetails.roomID!)
                         })
-                    
-            
+                        
+                        
                     }
             }
         }
@@ -180,7 +294,7 @@ struct ContentView: View {
 struct ReassignRoomToGroup {
     var selectedRoom: ChatItemDetails
     var selectedGroup: ChatRoomWithTotalMessage
-
+    
     init(selectedRoom: ChatItemDetails, selectedGroup: ChatRoomWithTotalMessage) {
         self.selectedRoom = selectedRoom
         self.selectedGroup = selectedGroup
@@ -193,7 +307,7 @@ struct ChatItemDetails: Codable, Transferable {
     let clusterGroupId: String?
     let totalMessage: Int32
     let roomCountUnderGroup: Int32
-
+    
     static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: .chatItemDetails)
     }
@@ -208,11 +322,11 @@ extension ContentView {
         @Published var navigationPath = [ChatRoomWithTotalMessage]()
         var selectedRoomGroup: ChatRoomWithTotalMessage? = nil
         var webSocket = Greeting().provideChatSocketService()
-     
+        
         var reassignRoomToGroup:ReassignRoomToGroup?=nil
         
         
-      
+        
         
         func assignRoomToSelectedGroup(groupID:String,roomId:Int32) {
             DispatchQueue.main.async {
@@ -222,17 +336,17 @@ extension ContentView {
                         print(isSuccess)
                         print(result)
                     }
-                    completionHandler: { err in
-                    print("cccc")
-                }
+            completionHandler: { err in
+                print("cccc")
+            }
             }
         }
         func initGroupListingSocketConnection()  {
             DispatchQueue.main.async {
                 self.initSocketConnection(webSocketLink: "/chatList", isForChat: false){
-                  print("aaaaa")
+                    print("2222")
                     self.retrieveGroupDetails(groupDetails: nil)
-
+                    
                 }
                 
             }
@@ -241,8 +355,8 @@ extension ContentView {
         func initChatRoomSocketConnection(roomId:KotlinInt)  {
             DispatchQueue.main.async {
                 self.initSocketConnection(webSocketLink: "/\(roomId)/", isForChat: true){
-                  print("aaaaa")
-            
+                    print("11111")
+                    
                 }
                 
             }
@@ -253,10 +367,10 @@ extension ContentView {
             let clusterIdString :String = groupDetails?.clusterGroupId ?? "-1"
             let clusterId:Int32 = Int32(clusterIdString) ?? -1
             
-            let groupListRequestData=GroupListRequestData(user: "aaa@aaa.com", clusterId:clusterId)
-       
-        print(groupListRequestData.groupListToString())
-        self.sendMessage(messageToSendJSON: groupListRequestData.groupListToString())
+            let groupListRequestData=GroupListRequestData(user: "bbb@bbb.com", clusterId:clusterId)
+            
+            print(groupListRequestData.groupListToString())
+            self.sendMessage(messageToSendJSON: groupListRequestData.groupListToString())
         }
         
         
@@ -268,7 +382,7 @@ extension ContentView {
                     self.isWebSocketConnect = (resource is ResourceSuccess)
                     if resource is ResourceSuccess
                     {
-                      
+                        
                         
                         if isForChat
                         {
@@ -280,7 +394,7 @@ extension ContentView {
                                     {
                                         self.chatMessageList.append(message!)
                                     }
-                                   
+                                    
                                 }
                             })
                         }
@@ -290,10 +404,16 @@ extension ContentView {
                             webSocket.observeGroupList().watch(block: {
                                 
                                 groupListDetails in
-                             
+                                
                                 if groupListDetails != nil
                                 {
-                                    self.groupListingWithChat=groupListDetails ?? nil
+                                    
+                                    if let requestedUser = groupListDetails?.requested_user, requestedUser == "bbb@bbb.com" {
+                                        self.groupListingWithChat = groupListDetails ?? nil
+                                    }
+                                    //                                    if ((groupListDetails?.requested_user) != nil)  {
+                                    //                                        self.groupListingWithChat=groupListDetails ?? nil
+                                    //                                    }
                                 }
                             })
                         }
@@ -304,8 +424,9 @@ extension ContentView {
                 
             }
         }
-   
+        
         func sendMessage(messageToSendJSON:String)  {
+            print(isWebSocketConnect)
             if isWebSocketConnect
             {
                 DispatchQueue.main.async {
@@ -315,10 +436,10 @@ extension ContentView {
                         self.sendMessageData=""
                     })
                 }
-
+                
             }
         }
-    
+        
     }
-   
+    
 }
