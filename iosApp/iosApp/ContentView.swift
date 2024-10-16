@@ -6,11 +6,13 @@ extension UTType
 {
     static let chatItemDetails = UTType(exportedAs: "orgIdentifier.iosApp")
 }
+let currentUser="bbb@bbb.com"
 
 struct ContentView: View {
     @ObservedObject private(set) var viewModel: ViewModel
     @State var showDialog: Bool = false
     @State  var redirectToChat: Bool = false
+    
     var body: some View {
         
         NavigationStack
@@ -35,11 +37,30 @@ struct ContentView: View {
         }
     }
     
-
+    struct CommanText:View {
+        var textValue:String
+        var textColor:Color
+        init(textValue:String,textColor:Color)
+        {
+            self.textValue=textValue
+            self.textColor=textColor
+        }
+        var body: some View {
+            Text(self.textValue)
+                .padding(8)
+            
+                .bold()
+                .frame(maxWidth: .infinity,alignment: .leading)
+                .foregroundColor(textColor)
+                .font(.custom(Font.family.JURA_BOLD, size: 20))
+        }
+    }
+    
     struct ChatRoomMain : View
     {
         @ObservedObject private(set) var viewModel: ViewModel
         var onBackPressed: ()->()
+        
         init(viewModel:ContentView.ViewModel,onBackPressed: @escaping()->())
         {
             self.viewModel=viewModel
@@ -49,6 +70,7 @@ struct ContentView: View {
         {
             VStack
             {
+               
                 HStack
                 {
                     Image(systemName: "chevron.left")
@@ -56,27 +78,76 @@ struct ContentView: View {
                     Text(viewModel.selectedRoom!.roomName)
                         .foregroundColor(.white)
                         .font(.custom(Font.family.JURA_BOLD, size: Font.size.title_large_font_size))
-                }.padding(15)
+                }.padding(.top,60)
+                    .padding(15)
                     .frame(maxWidth: .infinity,alignment: .leading)
-                .background(Color.theme.primary_color,alignment: .leading)
-                .onTapGesture {
-                    self.onBackPressed()
-                }
-                List {
-                    if let recievedMessage=viewModel.chatMessageList
-                    {
-                        if recievedMessage.message.isEmpty
-                        {
-                            ForEach(recievedMessage.prevMessages!, id: \.primaryId) {
-                                groupDetails in
-                                Text(groupDetails.message)
-                            }.rotationEffect(.radians(.pi))
-                                .scaleEffect(x: -1, y: 1, anchor: .center)
-                        }
+                    .background(Color.theme.primary_color,alignment: .leading)
+                    .onTapGesture {
+                        self.onBackPressed()
                     }
-                }.rotationEffect(.radians(.pi))
-                    .scaleEffect(x: -1, y: 1, anchor: .center)
+                VStack
+                {
+                    List {
+                        VStack
+                        {
+                        
+                            if let recievedMessage=viewModel.chatMessageList
+                            {
+                                
+                                if let prevMessageList = recievedMessage.prevMessages
+                                {
+                                    ForEach(prevMessageList.reversed(),id: \.primaryId)
+                                    { prevMessage in
+                                       
+                                        var color = if( prevMessage.user != currentUser) {Color.theme.secondary_color} else {Color.theme.primary_color}
+                                        var alignment = if( prevMessage.user != currentUser) {Alignment.trailing} else {Alignment.leading}
+                                        HStack
+                                        {
+                                            
+                                            CommanText(textValue: prevMessage.message,textColor: .white)
+                                                .body.padding(10)
+                                                .background(color.cornerRadius(10))
+                                                .foregroundColor(.white)
+                                            .frame(width: 200)
+                                            .padding(1)
+                    
+                                        }
+                                        .frame(maxWidth:  .infinity,alignment: alignment)
+                                      
+                                    }
+                                }
+                                
+                                if !recievedMessage.message.isEmpty
+                                {
+                                    CommanText(textValue: recievedMessage.message,textColor: .white)
+                                }
+                            }
+                            
+                        }
+                        .listRowBackground(Color.clear)
+                        .padding(EdgeInsets(top: 0, leading: -20, bottom: 0, trailing: -20))
+                    }
+                    .listSectionSeparator(.hidden, edges: .bottom)
+                    .listStyle(PlainListStyle())
+
+                }
+            HStack
+                {
+                    TextField("Enter Message",text: $viewModel.messageToSend)
+                        .padding(15)
+                        
+                        .foregroundColor(Color.theme.secondary_color)
+                    Image(systemName:"paperplane.fill")
+                        .background(.clear)
+                        .foregroundColor(.black)
+                        .padding(.trailing,20)
+                        .onTapGesture {
+                            print("send message")
+                        }
+                }
+                .background(Color.theme.textField_background)
             }
+            .ignoresSafeArea(edges: .top)
             .navigationBarBackButtonHidden()
             .onAppear(perform: {
                 viewModel.initChatRoomSocketConnection(roomId: viewModel.selectedRoom!.roomID!)
@@ -188,17 +259,12 @@ struct ContentView: View {
                 HStack
                 {
                     Text("")
-                    Text(chatMessageDetails.roomName)
-                        .padding(8)
-                    
-                        .bold()
-                        .frame(maxWidth: .infinity,alignment: .leading)
-                        .foregroundColor(Color.theme.secondary_color)
-                        .font(.custom(Font.family.JURA_BOLD, size: 20))
+                    CommanText(textValue: chatMessageDetails.roomName,textColor: Color.theme.secondary_color)
                         .onTapGesture {
                             viewModel.selectedRoom=chatMessageDetails
                             redirectToChat.toggle()
                         }.draggable(chatDetails)
+                  
                     
                 }
                 .listRowBackground(Color.clear)
@@ -303,42 +369,9 @@ struct ContentView: View {
                 
                     .onTapGesture {
                         print("asdsad")
-                        //viewModel.navigationPath.append(chatMessageDetails)
                         redirectToChat.toggle()
                     }.draggable(chatDetails)
-                //                    .navigationDestination(isPresented:$redirectToChat) {
-                //
-                //                        let  _ = print(chatMessageDetails)
-                //
-                //                        VStack {
-                //                            //                            HStack {
-                //                            //                                Text(chatMessageDetails.roomName)
-                //                            //                            }
-                //                            List {
-                //                                ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
-                //                                    Text(messageItem.message)
-                //                                        .padding(10)
-                //                                        .rotationEffect(.radians(.pi))
-                //                                        .scaleEffect(x: -1, y: 1, anchor: .center)
-                //                                }
-                //                            }.rotationEffect(.radians(.pi))
-                //                                .scaleEffect(x: -1, y: 1, anchor: .center)
-                //                            HStack {
-                //                                TextField("type message", text: $viewModel.sendMessageData)
-                //                                    .keyboardType(.asciiCapable)
-                //                                Button("send") {
-                //                                    let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "bbb@bbb.com", pageNumber: 1, blocked_user: [String]())
-                //                                    viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
-                //                                }
-                //                            }.padding(.horizontal, 30)
-                //                        }
-                //                        .onAppear(perform: {
-                //
-                //                            viewModel.initChatRoomSocketConnection(roomId: chatMessageDetails.roomID!)
-                //                        })
-                //
-                //
-                //                    }
+               
             }
         }
         .onAppear(perform: {
@@ -378,6 +411,7 @@ extension ContentView {
     class ViewModel: ObservableObject {
         @Published var chatMessageList:MessageDto?
         @Published var sendMessageData = ""
+        @Published var messageToSend = ""
         @Published var groupListingWithChat :GroupDetailsResponseDto?
         var isWebSocketConnect = false
         @Published var navigationPath = [ChatRoomWithTotalMessage]()
@@ -415,10 +449,10 @@ extension ContentView {
         }
         
         func initChatRoomSocketConnection(roomId:KotlinInt)  {
+            self.chatMessageList=nil
             DispatchQueue.main.async {
                 self.initSocketConnection(webSocketLink: "/\(roomId)/", isForChat: true){
-                    
-                    var chatMessageRequest=ChatMessageRequest(command: "join", message: "", user: "bbb@bbb,com", pageNumber: 0, blocked_user: [])
+                    let chatMessageRequest=ChatMessageRequest(command: "join", message: "", user: currentUser, pageNumber: 0, blocked_user: [])
                     self.sendMessage(messageToSendJSON: chatMessageRequest.getStringData())
                     
                 }
@@ -431,7 +465,7 @@ extension ContentView {
             let clusterIdString :String = groupDetails?.clusterGroupId ?? "-1"
             let clusterId:Int32 = Int32(clusterIdString) ?? -1
             
-            let groupListRequestData=GroupListRequestData(user: "bbb@bbb.com", clusterId:clusterId)
+            let groupListRequestData=GroupListRequestData(user: currentUser, clusterId:clusterId)
             
             print(groupListRequestData.groupListToString())
             self.sendMessage(messageToSendJSON: groupListRequestData.groupListToString())
@@ -440,13 +474,12 @@ extension ContentView {
         
         func initSocketConnection(webSocketLink:String,isForChat:Bool, onConnected: @escaping()->())  {
             DispatchQueue.main.async { [self] in
-                webSocket.doInitSession(roomId: webSocketLink,currentUserName: "bbb@bbb.com",completionHandler:
+                webSocket.doInitSession(roomId: webSocketLink,currentUserName: currentUser,completionHandler:
                                             { [self] resource,error in
                     
                     self.isWebSocketConnect = (resource is ResourceSuccess)
                     if resource is ResourceSuccess
                     {
-                        
                         
                         if isForChat
                         {
@@ -454,9 +487,18 @@ extension ContentView {
                                 message in
                                 
                                 if let  notNullMessage = message {
+                                    if let dd = self.chatMessageList
+                                    {
+                                        if let prev = dd.prevMessages
+                                        {
+                                            notNullMessage.prevMessages=prev
+                                        }
+                                        
+                                    }
+                                   
                                     self.chatMessageList = notNullMessage
                                 }
-                               
+                                
                             })
                         }
                         else
@@ -469,7 +511,7 @@ extension ContentView {
                                 if groupListDetails != nil
                                 {
                                     
-                                    if let requestedUser = groupListDetails?.requested_user, requestedUser == "bbb@bbb.com" {
+                                    if let requestedUser = groupListDetails?.requested_user, requestedUser == currentUser {
                                         self.groupListingWithChat = groupListDetails ?? nil
                                     }
                                     
@@ -478,7 +520,7 @@ extension ContentView {
                         }
                         onConnected()
                     }
-                   
+                    
                     
                 })
                 
