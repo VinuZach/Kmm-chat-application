@@ -13,22 +13,62 @@ struct ContentView: View {
     @State  var redirectToChat: Bool = false
     var body: some View {
         
-        //        NavigationStack {
-        //            groupListingView
-        //        }
-        
         NavigationStack
+        {
+            ZStack(alignment: .bottomTrailing)
+            {
+                VStack
+                {
+                    Text("Logo")
+                        .frame(minHeight: 150)
+                    ChatGroupAndListingMain
+                }
+                .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .bottom )
+                .background(Color.theme.primary_color)
+                Button(action: {}, label: {
+                    Image(systemName: "plus").padding(20)
+                }).frame(alignment: .bottomTrailing)
+                    .foregroundColor(.white)
+                    .background(Color.theme.primary_color.cornerRadius(60))
+                    .padding()
+            }
+        }
+    }
+    
+    struct ChatRoomMain : View
+    {
+        @ObservedObject private(set) var viewModel: ViewModel
+        
+        init(viewModel:ContentView.ViewModel)
+        {
+            self.viewModel=viewModel
+        }
+        var body: some View
         {
             VStack
             {
-                Text("Logo")
-                    .frame(minHeight: 150)
-                ChatGroupAndListingMain
-            }
-            .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .bottom )
-            .background(Color.theme.primary_color)
+                Text(viewModel.selectedRoom!.roomName)
+                
+                List {
+                    if let recievedMessage=viewModel.chatMessageList
+                    {
+                        if recievedMessage.message.isEmpty
+                        {
+                            ForEach(recievedMessage.prevMessages!, id: \.primaryId) {
+                                groupDetails in
+                                Text(groupDetails.message)
+                            }.rotationEffect(.radians(.pi))
+                                .scaleEffect(x: -1, y: 1, anchor: .center)
+                        }
+                    }
+                }.rotationEffect(.radians(.pi))
+                    .scaleEffect(x: -1, y: 1, anchor: .center)
+            }    .onAppear(perform: {
+                viewModel.initChatRoomSocketConnection(roomId: viewModel.selectedRoom!.roomID!)
+            })
         }
     }
+    
     
     var ChatGroupAndListingMain :some View
     {
@@ -108,12 +148,12 @@ struct ContentView: View {
             let chatMessageList = viewModel.groupListingWithChat?.chatRoomWithTotalMessage ??
             [ChatRoomWithTotalMessage]()
             
-            if viewModel.selectedRoomGroup != nil {
+            if viewModel.selectedGroup != nil {
                 ZStack {
                     HStack {
                         Image(systemName: "chevron.backward")
                             .padding(.horizontal, 20)
-                        Text(viewModel.selectedRoomGroup!.roomName)
+                        Text(viewModel.selectedGroup!.roomName)
                         Spacer()
                     }
                     .padding(.vertical,20)
@@ -140,7 +180,7 @@ struct ContentView: View {
                         .foregroundColor(Color.theme.secondary_color)
                         .font(.custom(Font.family.JURA_BOLD, size: 20))
                         .onTapGesture {
-                            
+                            viewModel.selectedRoom=chatMessageDetails
                             redirectToChat.toggle()
                         }.draggable(chatDetails)
                     
@@ -151,7 +191,7 @@ struct ContentView: View {
             .listSectionSeparator(.hidden, edges: .bottom)
             .listStyle(PlainListStyle())
             .navigationDestination(isPresented:$redirectToChat) {
-                Text("ccc")
+                ChatRoomMain(viewModel: viewModel)
             }
             
         }
@@ -222,14 +262,14 @@ struct ContentView: View {
             let chatMessageList = viewModel.groupListingWithChat?.chatRoomWithTotalMessage ??
             [ChatRoomWithTotalMessage]()
             
-            if viewModel.selectedRoomGroup != nil {
+            if viewModel.selectedGroup != nil {
                 ZStack {
                     HStack {
                         Image(systemName: "chevron.backward")
                             .onTapGesture {
                                 viewModel.retrieveGroupDetails(groupDetails: nil)
                             }.padding(.horizontal, 20)
-                        Text(viewModel.selectedRoomGroup!.roomName)
+                        Text(viewModel.selectedGroup!.roomName)
                         Spacer()
                     }
                     .padding(.vertical, 10)
@@ -246,38 +286,39 @@ struct ContentView: View {
                         //viewModel.navigationPath.append(chatMessageDetails)
                         redirectToChat.toggle()
                     }.draggable(chatDetails)
-                    .navigationDestination(isPresented:$redirectToChat) {
-                        
-                        let  _ = print(chatMessageDetails)
-                        
-                        VStack {
-                            //                            HStack {
-                            //                                Text(chatMessageDetails.roomName)
-                            //                            }
-                            List {
-                                ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
-                                    Text(messageItem.message)
-                                        .padding(10)
-                                        .rotationEffect(.radians(.pi))
-                                        .scaleEffect(x: -1, y: 1, anchor: .center)
-                                }
-                            }.rotationEffect(.radians(.pi))
-                                .scaleEffect(x: -1, y: 1, anchor: .center)
-                            HStack {
-                                TextField("type message", text: $viewModel.sendMessageData)
-                                    .keyboardType(.asciiCapable)
-                                Button("send") {
-                                    let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "bbb@bbb.com", pageNumber: 1, blocked_user: [String]())
-                                    viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
-                                }
-                            }.padding(.horizontal, 30)
-                        }
-                        .onAppear(perform: {
-                            viewModel.initChatRoomSocketConnection(roomId: chatMessageDetails.roomID!)
-                        })
-                        
-                        
-                    }
+                //                    .navigationDestination(isPresented:$redirectToChat) {
+                //
+                //                        let  _ = print(chatMessageDetails)
+                //
+                //                        VStack {
+                //                            //                            HStack {
+                //                            //                                Text(chatMessageDetails.roomName)
+                //                            //                            }
+                //                            List {
+                //                                ForEach(viewModel.chatMessageList.reversed(), id: \.self) { messageItem in
+                //                                    Text(messageItem.message)
+                //                                        .padding(10)
+                //                                        .rotationEffect(.radians(.pi))
+                //                                        .scaleEffect(x: -1, y: 1, anchor: .center)
+                //                                }
+                //                            }.rotationEffect(.radians(.pi))
+                //                                .scaleEffect(x: -1, y: 1, anchor: .center)
+                //                            HStack {
+                //                                TextField("type message", text: $viewModel.sendMessageData)
+                //                                    .keyboardType(.asciiCapable)
+                //                                Button("send") {
+                //                                    let messageToSend = ChatMessageRequest(command: "content", message: viewModel.sendMessageData, user: "bbb@bbb.com", pageNumber: 1, blocked_user: [String]())
+                //                                    viewModel.sendMessage(messageToSendJSON: messageToSend.getStringData())
+                //                                }
+                //                            }.padding(.horizontal, 30)
+                //                        }
+                //                        .onAppear(perform: {
+                //
+                //                            viewModel.initChatRoomSocketConnection(roomId: chatMessageDetails.roomID!)
+                //                        })
+                //
+                //
+                //                    }
             }
         }
         .onAppear(perform: {
@@ -315,12 +356,13 @@ struct ChatItemDetails: Codable, Transferable {
 
 extension ContentView {
     class ViewModel: ObservableObject {
-        @Published var chatMessageList=[MessageDto]()
+        @Published var chatMessageList:MessageDto?
         @Published var sendMessageData = ""
         @Published var groupListingWithChat :GroupDetailsResponseDto?
         var isWebSocketConnect = false
         @Published var navigationPath = [ChatRoomWithTotalMessage]()
-        var selectedRoomGroup: ChatRoomWithTotalMessage? = nil
+        var selectedGroup: ChatRoomWithTotalMessage? = nil
+        var selectedRoom:ChatRoomWithTotalMessage? = nil
         var webSocket = Greeting().provideChatSocketService()
         
         var reassignRoomToGroup:ReassignRoomToGroup?=nil
@@ -355,7 +397,9 @@ extension ContentView {
         func initChatRoomSocketConnection(roomId:KotlinInt)  {
             DispatchQueue.main.async {
                 self.initSocketConnection(webSocketLink: "/\(roomId)/", isForChat: true){
-                    print("11111")
+                    
+                    var chatMessageRequest=ChatMessageRequest(command: "join", message: "", user: "bbb@bbb,com", pageNumber: 0, blocked_user: [])
+                    self.sendMessage(messageToSendJSON: chatMessageRequest.getStringData())
                     
                 }
                 
@@ -363,7 +407,7 @@ extension ContentView {
         }
         
         func retrieveGroupDetails(groupDetails:ChatRoomWithTotalMessage?)  {
-            selectedRoomGroup=groupDetails
+            selectedGroup=groupDetails
             let clusterIdString :String = groupDetails?.clusterGroupId ?? "-1"
             let clusterId:Int32 = Int32(clusterIdString) ?? -1
             
@@ -376,7 +420,7 @@ extension ContentView {
         
         func initSocketConnection(webSocketLink:String,isForChat:Bool, onConnected: @escaping()->())  {
             DispatchQueue.main.async { [self] in
-                webSocket.doInitSession(roomId: webSocketLink,currentUserName: "",completionHandler:
+                webSocket.doInitSession(roomId: webSocketLink,currentUserName: "bbb@bbb.com",completionHandler:
                                             { [self] resource,error in
                     
                     self.isWebSocketConnect = (resource is ResourceSuccess)
@@ -388,14 +432,19 @@ extension ContentView {
                         {
                             webSocket.observeMessages().watch(block:{
                                 message in
-                                if message != nil
-                                {
-                                    if !self.chatMessageList.contains(message!)
-                                    {
-                                        self.chatMessageList.append(message!)
-                                    }
-                                    
+                                
+                                if let  notNullMessage = message {
+                                    self.chatMessageList = notNullMessage
                                 }
+                                //                                if message != nil
+                                //                                {
+                                //                                    if !self.chatMessageList ==message!
+                                //                                    {
+                                //                                        self.chatMessageList.append(message!)
+                                //
+                                //                                    }
+                                
+                                //                                }
                             })
                         }
                         else
@@ -411,13 +460,15 @@ extension ContentView {
                                     if let requestedUser = groupListDetails?.requested_user, requestedUser == "bbb@bbb.com" {
                                         self.groupListingWithChat = groupListDetails ?? nil
                                     }
-                                    //                                    if ((groupListDetails?.requested_user) != nil)  {
-                                    //                                        self.groupListingWithChat=groupListDetails ?? nil
-                                    //                                    }
+                                    
                                 }
                             })
                         }
                         onConnected()
+                    }
+                    else
+                    {
+                        print(error)
                     }
                     
                 })
