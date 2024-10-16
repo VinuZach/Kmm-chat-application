@@ -35,20 +35,33 @@ struct ContentView: View {
         }
     }
     
+
     struct ChatRoomMain : View
     {
         @ObservedObject private(set) var viewModel: ViewModel
-        
-        init(viewModel:ContentView.ViewModel)
+        var onBackPressed: ()->()
+        init(viewModel:ContentView.ViewModel,onBackPressed: @escaping()->())
         {
             self.viewModel=viewModel
+            self.onBackPressed=onBackPressed
         }
         var body: some View
         {
             VStack
             {
-                Text(viewModel.selectedRoom!.roomName)
-                
+                HStack
+                {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                    Text(viewModel.selectedRoom!.roomName)
+                        .foregroundColor(.white)
+                        .font(.custom(Font.family.JURA_BOLD, size: Font.size.title_large_font_size))
+                }.padding(15)
+                    .frame(maxWidth: .infinity,alignment: .leading)
+                .background(Color.theme.primary_color,alignment: .leading)
+                .onTapGesture {
+                    self.onBackPressed()
+                }
                 List {
                     if let recievedMessage=viewModel.chatMessageList
                     {
@@ -63,9 +76,12 @@ struct ContentView: View {
                     }
                 }.rotationEffect(.radians(.pi))
                     .scaleEffect(x: -1, y: 1, anchor: .center)
-            }    .onAppear(perform: {
+            }
+            .navigationBarBackButtonHidden()
+            .onAppear(perform: {
                 viewModel.initChatRoomSocketConnection(roomId: viewModel.selectedRoom!.roomID!)
             })
+            
         }
     }
     
@@ -192,6 +208,10 @@ struct ContentView: View {
             .listStyle(PlainListStyle())
             .navigationDestination(isPresented:$redirectToChat) {
                 ChatRoomMain(viewModel: viewModel)
+                {
+                    print("asdsa")
+                    redirectToChat.toggle()
+                }
             }
             
         }
@@ -436,15 +456,7 @@ extension ContentView {
                                 if let  notNullMessage = message {
                                     self.chatMessageList = notNullMessage
                                 }
-                                //                                if message != nil
-                                //                                {
-                                //                                    if !self.chatMessageList ==message!
-                                //                                    {
-                                //                                        self.chatMessageList.append(message!)
-                                //
-                                //                                    }
-                                
-                                //                                }
+                               
                             })
                         }
                         else
@@ -466,10 +478,7 @@ extension ContentView {
                         }
                         onConnected()
                     }
-                    else
-                    {
-                        print(error)
-                    }
+                   
                     
                 })
                 
