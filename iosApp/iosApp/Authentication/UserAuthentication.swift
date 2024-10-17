@@ -142,8 +142,8 @@ struct UserAuthentication: View {
         
         func callCorrespondingApiCall(@ObservedObject viewModel:UserAuthentication.ViewModel)
         {
-          
-//       if(viewModel.isUserLoginView)
+            
+    //       if(viewModel.isUserLoginView)
 //       {
 //           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).verifyUserDetails(userName:viewModel.username, password: viewModel.password) { (isSuccess, result) in
 //

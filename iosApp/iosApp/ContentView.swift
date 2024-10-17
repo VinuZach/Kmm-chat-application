@@ -99,8 +99,8 @@ struct ContentView: View {
                                     ForEach(prevMessageList.reversed(),id: \.primaryId)
                                     { prevMessage in
                                        
-                                        var color = if( prevMessage.user != currentUser) {Color.theme.secondary_color} else {Color.theme.primary_color}
-                                        var alignment = if( prevMessage.user != currentUser) {Alignment.trailing} else {Alignment.leading}
+                                        let color = if( prevMessage.user != currentUser) {Color.theme.secondary_color} else {Color.theme.primary_color}
+                                        let alignment = if( prevMessage.user != currentUser) {Alignment.trailing} else {Alignment.leading}
                                         HStack
                                         {
                                             

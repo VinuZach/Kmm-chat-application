@@ -1,20 +1,12 @@
 package com.example.chatapplication.android.Authentication
 
 
-import android.util.Log
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatapplication.ApiHandler
 import com.example.chatapplication.ApiResponseObtained
-import com.example.chatapplication.cacheConfig.USER_NAME
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
+import com.example.chatapplication.cacheConfig.CacheManager
+import com.example.chatapplication.cacheConfig.DataStoreKeys
 import kotlinx.coroutines.launch
 
 
@@ -34,12 +26,14 @@ class AuthenticationViewModel() : ViewModel()
 
     }
 
-    fun saveUserNameToCache(cacheManager: DataStore<Preferences>, userName: String)
+    fun saveUserNameToCache(cacheManager: CacheManager, userName: String)
     {
         viewModelScope.launch {
-            cacheManager.edit { preference ->
-                preference[USER_NAME] = userName
-            }
+            cacheManager.saveDataToCache(DataStoreKeys.USER_NAME,userName)
+//            cacheManager.edit { preference ->
+//                preference[USER_NAME] = userName
+//            }
+
         }
 
     }

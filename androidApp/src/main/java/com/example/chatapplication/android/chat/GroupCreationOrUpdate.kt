@@ -42,8 +42,8 @@ import androidx.compose.ui.unit.dp
 import com.example.chatapplication.ApiConfig.model.ChatListResponse
 import com.example.chatapplication.ApiConfig.model.ChatListResponseData
 import com.example.chatapplication.cacheConfig.CacheManager
-import com.example.chatapplication.cacheConfig.USER_NAME
-import kotlinx.coroutines.flow.firstOrNull
+import com.example.chatapplication.cacheConfig.DataStoreInstance
+import com.example.chatapplication.cacheConfig.DataStoreKeys
 import kotlinx.coroutines.launch
 
 @Composable
@@ -84,9 +84,10 @@ fun GroupCreationOrUpdate(
 
         coroutineScope.launch {
             Log.d("bdfgert", "ContentView:2222")
-            val cacheManager = CacheManager.getManger(context = context)
-            currentUserName.value = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME).toString()
-
+//            val cacheManager = CacheManager.getManger(context = context)
+//            currentUserName.value = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME).toString()
+            val cacheManager=CacheManager(DataStoreInstance.getManger(context))
+            currentUserName.value=cacheManager.retrieveDataFromCache(DataStoreKeys.USER_NAME)!!
         }.invokeOnCompletion {
             Log.d("bdfgert", "ContentView: $currentUserName")
             viewModel.retrieveChatList(currentUserName.value, true, onResultObtained = object : (Boolean, Any) -> Unit {

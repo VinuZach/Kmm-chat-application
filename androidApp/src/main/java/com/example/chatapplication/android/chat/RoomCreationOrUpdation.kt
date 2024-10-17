@@ -1,5 +1,6 @@
 package com.example.chatapplication.android.chat
 
+
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -41,8 +42,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.chatapplication.ApiConfig.model.UsersEmailsResponse
 import com.example.chatapplication.cacheConfig.CacheManager
-import com.example.chatapplication.cacheConfig.USER_NAME
-import kotlinx.coroutines.flow.firstOrNull
+import com.example.chatapplication.cacheConfig.DataStoreInstance
+import com.example.chatapplication.cacheConfig.DataStoreKeys
 import kotlinx.coroutines.launch
 
 @Preview
@@ -82,8 +83,9 @@ fun RoomCreationOrUpdate(chatCreationUpdate: ChatCreationUpdate = ChatCreationUp
 
         coroutineScope.launch {
             Log.d("asdasda", "ContentView:2222")
-            val cacheManager = CacheManager.getManger(context = context)
-            currentUserName.value = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME).toString()
+
+            val cacheManager=CacheManager(DataStoreInstance.getManger(context))
+            currentUserName.value=cacheManager.retrieveDataFromCache(DataStoreKeys.USER_NAME)!!
 
         }.invokeOnCompletion {
             Log.d("asdasda", "ContentView: $currentUserName")

@@ -18,15 +18,14 @@ import androidx.navigation.compose.rememberNavController
 import com.example.chatapplication.android.chat.MainActivity
 import com.example.chatapplication.android.theme.ChatApplicationTheme
 import com.example.chatapplication.cacheConfig.CacheManager
-import com.example.chatapplication.cacheConfig.USER_NAME
-import kotlinx.coroutines.flow.firstOrNull
+import com.example.chatapplication.cacheConfig.DataStoreInstance
+import com.example.chatapplication.cacheConfig.DataStoreKeys
+
 import kotlinx.coroutines.launch
 
-class AuthenticationActivity : ComponentActivity()
-{
+class AuthenticationActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?)
-    {
+    override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -43,14 +42,15 @@ class AuthenticationActivity : ComponentActivity()
                     LaunchedEffect(key1 = true) {
                         coroutineScope.launch {
 
-                            val cacheManager = CacheManager.getManger(context = context)
-                            val userNameFlow = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
-
-                          if (userNameFlow!=null)
-                          {
-                              finish()
-                              startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
-                          }
+//                            val cacheManager = CacheManager.getManger(context = context)
+//
+//                            val userNameFlow = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
+                            val cacheManager = CacheManager(DataStoreInstance.getManger(context))
+                           val userName=cacheManager.retrieveDataFromCache(DataStoreKeys.USER_NAME)
+                            if (userName != null) {
+                                finish()
+                                startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
+                            }
                         }
                     }
 
@@ -58,16 +58,12 @@ class AuthenticationActivity : ComponentActivity()
                     NavHost(navController = navController, startDestination = "user_authentication") {
 
                         composable(route = "user_authentication") {
-                            UserAuthenticationFullPage(onNavigate = object : onNavigate
-                            {
-                                override fun onTaskPerformed(navigate: String)
-                                {
-                                    if (navigate == "complete")
-                                    {
+                            UserAuthenticationFullPage(onNavigate = object : onNavigate {
+                                override fun onTaskPerformed(navigate: String) {
+                                    if (navigate == "complete") {
                                         finish()
                                         startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))
-                                    }
-                                    else navController.navigate(navigate)
+                                    } else navController.navigate(navigate)
                                 }
 
                             })
