@@ -13,26 +13,34 @@ fun createDataStore(producePath: () -> String): DataStore<Preferences> =
 
 internal const val dataStoreFileName = "dice.preferences_pb"
 
-annotation class DataStoreKeys
-{
-   companion object
-   {
-       val USER_NAME = stringPreferencesKey("user_name")
-   }
 
-}
 
 class CacheManager(private val dataStoreInstance:DataStore<Preferences>)
 {
-    suspend fun <T>saveDataToCache(@DataStoreKeys key:Preferences.Key<T>,value :T)
+
+    val USER_NAME = stringPreferencesKey("user_name")
+
+
+    suspend fun <T>saveDataToCache( key:Preferences.Key<T>,value :T)
     {
         dataStoreInstance.edit {
             it[key]=value
         }
     }
-    suspend fun <T>retrieveDataFromCache(@DataStoreKeys key:Preferences.Key<T>):T?
+    suspend fun <T>retrieveDataFromCache( key:Preferences.Key<T>):T?
     {
        return dataStoreInstance.data.first().toPreferences()[key]
+    }
+
+    suspend fun saveStringDataToCache( key:Preferences.Key<String>,value :String)
+    {
+        dataStoreInstance.edit {
+            it[key]=value
+        }
+    }
+    suspend fun retrieveStringDataFromCache( key:Preferences.Key<String>):String?
+    {
+        return dataStoreInstance.data.first().toPreferences()[key]
     }
 
 }

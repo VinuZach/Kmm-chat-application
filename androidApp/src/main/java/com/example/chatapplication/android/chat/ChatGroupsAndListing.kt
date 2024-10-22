@@ -52,7 +52,7 @@ import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithT
 import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupListRequestData
 import com.example.chatapplication.cacheConfig.CacheManager
 import com.example.chatapplication.cacheConfig.DataStoreInstance
-import com.example.chatapplication.cacheConfig.DataStoreKeys
+
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
@@ -105,7 +105,7 @@ fun GroupListingAndChatView(viewModel: ChatViewModel = ChatViewModel(),
             coroutineScope.launch {
 
                 val cacheManager=CacheManager(DataStoreInstance.getManger(context))
-                val userNameFlow=cacheManager.retrieveDataFromCache(DataStoreKeys.USER_NAME)
+                val userNameFlow=cacheManager.retrieveDataFromCache(cacheManager.USER_NAME)
                 viewModel.userName.value = userNameFlow!!
                 retrieveChatOfGroup.invoke(-1, null)
                 Log.e("asdasd", "GroupListingAndChatView: $userNameFlow")

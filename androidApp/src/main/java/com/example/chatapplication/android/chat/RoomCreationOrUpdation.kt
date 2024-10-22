@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.example.chatapplication.ApiConfig.model.UsersEmailsResponse
 import com.example.chatapplication.cacheConfig.CacheManager
 import com.example.chatapplication.cacheConfig.DataStoreInstance
-import com.example.chatapplication.cacheConfig.DataStoreKeys
+
 import kotlinx.coroutines.launch
 
 @Preview
@@ -85,7 +85,7 @@ fun RoomCreationOrUpdate(chatCreationUpdate: ChatCreationUpdate = ChatCreationUp
             Log.d("asdasda", "ContentView:2222")
 
             val cacheManager=CacheManager(DataStoreInstance.getManger(context))
-            currentUserName.value=cacheManager.retrieveDataFromCache(DataStoreKeys.USER_NAME)!!
+            currentUserName.value=cacheManager.retrieveDataFromCache(cacheManager.USER_NAME)!!
 
         }.invokeOnCompletion {
             Log.d("asdasda", "ContentView: $currentUserName")

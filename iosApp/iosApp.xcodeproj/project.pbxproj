@@ -10,6 +10,7 @@
 		058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557BA273AAA24004C7B11 /* Assets.xcassets */; };
 		058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */; };
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
+		2A32528A2CC2A9B3001DF645 /* CreateChatOrGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3252892CC2A9B3001DF645 /* CreateChatOrGroupView.swift */; };
 		2A85B13A2C049C4C00A57625 /* SimpleToast in Frameworks */ = {isa = PBXBuildFile; productRef = 2A85B1392C049C4C00A57625 /* SimpleToast */; };
 		2A8C9BAA2C05BA3E00991113 /* UserAuthentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A8C9BA92C05BA3E00991113 /* UserAuthentication.swift */; };
 		2A9E26542CB55BB700F4A4F9 /* InriaSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2A9E26532CB55BB700F4A4F9 /* InriaSans-Regular.ttf */; };
@@ -36,6 +37,7 @@
 		058557BA273AAA24004C7B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
+		2A3252892CC2A9B3001DF645 /* CreateChatOrGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateChatOrGroupView.swift; sourceTree = "<group>"; };
 		2A8C9BA92C05BA3E00991113 /* UserAuthentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAuthentication.swift; sourceTree = "<group>"; };
 		2A9E26532CB55BB700F4A4F9 /* InriaSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InriaSans-Regular.ttf"; sourceTree = "<group>"; };
 		2A9E26552CB55BC800F4A4F9 /* Jura-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Jura-Bold.ttf"; sourceTree = "<group>"; };
@@ -64,6 +66,15 @@
 				058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		2A3252882CC2A980001DF645 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				7555FF82242A565900829871 /* ContentView.swift */,
+				2A3252892CC2A9B3001DF645 /* CreateChatOrGroupView.swift */,
+			);
+			path = Chat;
 			sourceTree = "<group>";
 		};
 		2A8C9BA82C05BA1900991113 /* Authentication */ = {
@@ -112,11 +123,11 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				2A3252882CC2A980001DF645 /* Chat */,
 				2AE1C05B2CBBE56A009F1943 /* Extension */,
 				2A9E26522CB55B8800F4A4F9 /* Font */,
 				2A8C9BA82C05BA1900991113 /* Authentication */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
-				7555FF82242A565900829871 /* ContentView.swift */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
 				058557D7273AAEEB004C7B11 /* Preview Content */,
@@ -232,6 +243,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2A8C9BAA2C05BA3E00991113 /* UserAuthentication.swift in Sources */,
+				2A32528A2CC2A9B3001DF645 /* CreateChatOrGroupView.swift in Sources */,
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				2A9E26582CB55DFE00F4A4F9 /* Font_Constant.swift in Sources */,
 				2AE1C05D2CBBE584009F1943 /* Color.swift in Sources */,

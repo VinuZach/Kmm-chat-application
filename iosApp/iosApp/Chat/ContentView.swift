@@ -6,34 +6,60 @@ extension UTType
 {
     static let chatItemDetails = UTType(exportedAs: "orgIdentifier.iosApp")
 }
-let currentUser="bbb@bbb.com"
+var currentUser:String=""
 
 struct ContentView: View {
-    @ObservedObject private(set) var viewModel: ViewModel
+    @ObservedObject private(set) var viewModel: ContentView.ViewModel
     @State var showDialog: Bool = false
     @State  var redirectToChat: Bool = false
+    @State var createNewChat:Bool=false
+    @State var createNewGroup:Bool=false
     
     var body: some View {
         
-        NavigationStack
+        NavigationStack()
         {
+            
             ZStack(alignment: .bottomTrailing)
             {
                 VStack
                 {
                     Text("Logo")
                         .frame(minHeight: 150)
+                    
                     ChatGroupAndListingMain
                 }
                 .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .bottom )
                 .background(Color.theme.primary_color)
-                Button(action: {}, label: {
+                Button(action: {
+                    createNewChat.toggle()
+                 
+                }, label: {
+                    
                     Image(systemName: "plus").padding(20)
                 }).frame(alignment: .bottomTrailing)
                     .foregroundColor(.white)
                     .background(Color.theme.primary_color.cornerRadius(60))
                     .padding()
             }
+        }.navigationDestination(isPresented: $redirectToChat) {
+            ChatRoomMain(viewModel: viewModel)
+            {
+                
+                print("asdasd")
+                redirectToChat.toggle()
+            }
+        }
+        .navigationDestination(isPresented: $createNewChat) {
+            CreateChatOrGroupView(issForChatCreation: true) {
+                createNewChat.toggle()
+            }.navigationBarBackButtonHidden()
+        }
+    
+        .navigationDestination(isPresented: $createNewGroup) {
+            CreateChatOrGroupView(issForChatCreation: false) {
+                createNewGroup.toggle()
+            }.navigationBarBackButtonHidden()
         }
     }
     
@@ -58,7 +84,7 @@ struct ContentView: View {
     
     struct ChatRoomMain : View
     {
-        @ObservedObject private(set) var viewModel: ViewModel
+        @ObservedObject private(set) var viewModel: ContentView.ViewModel
         var onBackPressed: ()->()
         
         init(viewModel:ContentView.ViewModel,onBackPressed: @escaping()->())
@@ -70,7 +96,7 @@ struct ContentView: View {
         {
             VStack
             {
-               
+                
                 HStack
                 {
                     Image(systemName: "chevron.left")
@@ -90,7 +116,7 @@ struct ContentView: View {
                     List {
                         VStack
                         {
-                        
+                            
                             if let recievedMessage=viewModel.chatMessageList
                             {
                                 
@@ -98,7 +124,7 @@ struct ContentView: View {
                                 {
                                     ForEach(prevMessageList.reversed(),id: \.primaryId)
                                     { prevMessage in
-                                       
+                                        
                                         let color = if( prevMessage.user != currentUser) {Color.theme.secondary_color} else {Color.theme.primary_color}
                                         let alignment = if( prevMessage.user != currentUser) {Alignment.trailing} else {Alignment.leading}
                                         HStack
@@ -108,12 +134,12 @@ struct ContentView: View {
                                                 .body.padding(10)
                                                 .background(color.cornerRadius(10))
                                                 .foregroundColor(.white)
-                                            .frame(width: 200)
-                                            .padding(1)
-                    
+                                                .frame(width: 200)
+                                                .padding(1)
+                                            
                                         }
                                         .frame(maxWidth:  .infinity,alignment: alignment)
-                                      
+                                        
                                     }
                                 }
                                 
@@ -129,13 +155,13 @@ struct ContentView: View {
                     }
                     .listSectionSeparator(.hidden, edges: .bottom)
                     .listStyle(PlainListStyle())
-
+                    
                 }
-            HStack
+                HStack
                 {
                     TextField("Enter Message",text: $viewModel.messageToSend)
                         .padding(15)
-                        
+                    
                         .foregroundColor(Color.theme.secondary_color)
                     Image(systemName:"paperplane.fill")
                         .background(.clear)
@@ -150,6 +176,7 @@ struct ContentView: View {
             .ignoresSafeArea(edges: .top)
             .navigationBarBackButtonHidden()
             .onAppear(perform: {
+                
                 viewModel.initChatRoomSocketConnection(roomId: viewModel.selectedRoom!.roomID!)
             })
             
@@ -162,16 +189,17 @@ struct ContentView: View {
         
         return VStack{
             let groupDetailsList = viewModel.groupListingWithChat?.clusterRoomGroups ?? [ChatRoomWithTotalMessage]()
+            
             ScrollView(.horizontal) {
                 HStack
                 {
                     Section {
-                        Button("+") {
-                            print("asdasd")
-                        } .padding(.horizontal,40)
+                       Text("+") .padding(.horizontal,40)
                             .padding(.vertical,8)
                             .foregroundColor(Color.theme.textField_background)
-                            .background(Color.theme.primary_color.cornerRadius(20))
+                            .background(Color.theme.primary_color.cornerRadius(20)).onTapGesture {
+                                createNewGroup=true
+                            }
                     }
                     ForEach(groupDetailsList, id: \.clusterGroupId) {
                         groupDetails in
@@ -264,7 +292,7 @@ struct ContentView: View {
                             viewModel.selectedRoom=chatMessageDetails
                             redirectToChat.toggle()
                         }.draggable(chatDetails)
-                  
+                    
                     
                 }
                 .listRowBackground(Color.clear)
@@ -272,20 +300,26 @@ struct ContentView: View {
             }
             .listSectionSeparator(.hidden, edges: .bottom)
             .listStyle(PlainListStyle())
-            .navigationDestination(isPresented:$redirectToChat) {
-                ChatRoomMain(viewModel: viewModel)
-                {
-                    print("asdsa")
-                    redirectToChat.toggle()
-                }
-            }
+            
             
         }
         .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .top )
         .background(Color.theme.backgroundColor.cornerRadius(20).ignoresSafeArea(edges: .bottom))
         .onAppear(perform: {
             print("group appear ")
-            viewModel.initGroupListingSocketConnection()
+            let cacheManger = CacheManager(dataStoreInstance: DataStoreInstance().getManger())
+            cacheManger.retrieveStringDataFromCache(key: cacheManger.USER_NAME) {
+                result,error in
+                if result != nil,let result
+                {
+                    
+                    print(currentUser)
+                    currentUser=result
+                    print(currentUser)
+                    viewModel.initGroupListingSocketConnection()
+                }
+            }
+            
         })
     }
     
@@ -307,7 +341,7 @@ struct ContentView: View {
                             .dropDestination(for: ChatItemDetails.self) { droppedRoomDetailList, location in
                                 
                                 viewModel.reassignRoomToGroup = ReassignRoomToGroup(selectedRoom: droppedRoomDetailList.first!, selectedGroup: groupDetails)
-                                print(groupDetails)
+                                
                                 showDialog = true
                                 return false
                                 
@@ -371,7 +405,7 @@ struct ContentView: View {
                         print("asdsad")
                         redirectToChat.toggle()
                     }.draggable(chatDetails)
-               
+                
             }
         }
         .onAppear(perform: {
@@ -495,7 +529,7 @@ extension ContentView {
                                         }
                                         
                                     }
-                                   
+                                    
                                     self.chatMessageList = notNullMessage
                                 }
                                 

@@ -19,14 +19,16 @@ struct UserAuthentication: View {
                                                   animation: .default,
                                                   modifierType: .slide
     )
-    
+    @State private var isLoggedIn: Bool = false
     
     var body: some View {
        
         NavigationStack
         {
+            
             VStack
             {
+                
                 Text("Logo")
                     .frame(minHeight: 150)
                 LoginView(viewModel: viewModel)
@@ -42,7 +44,6 @@ struct UserAuthentication: View {
             .frame(maxWidth: .infinity,  maxHeight: .infinity,alignment: .bottom )
             .background(Color.theme.primary_color)
         }
-        
     }
     
     struct LoginView:View {
@@ -106,8 +107,15 @@ struct UserAuthentication: View {
                 }.background(Color.theme.textField_background)
                 Spacer()
                 Button(action: {
+                  
+//                    viewModel.cacheManger.saveDataToCache(key:viewModel.cacheManger.USER_NAME, value:"aaa@aaa.com") {
+//                        _ in
+//                        print("saving")
+//                        isLoggedIn = true
+//                    }
+                   
                     isLoggedIn = true
-                    callCorrespondingApiCall(viewModel: self.viewModel)
+              //      callCorrespondingApiCall(viewModel: self.viewModel)
                 }, label: {
                     Text("Login")
                         .frame(maxWidth: .infinity)
@@ -135,6 +143,19 @@ struct UserAuthentication: View {
                         viewModel.isUserLoginView.toggle()
                 }
             }
+            .onAppear {
+                let cacheManger = CacheManager(dataStoreInstance: DataStoreInstance().getManger())
+                cacheManger.retrieveStringDataFromCache(key: cacheManger.USER_NAME) {
+                    result,error in
+                    if result != nil
+                    {
+                      print("ccc")
+                     
+                    //  isLoggedIn = true
+                  }
+                }
+            }
+
             .padding(30)
             .frame(maxWidth: .infinity)
             .background(Color.theme.backgroundColor.cornerRadius(20).ignoresSafeArea(edges: .bottom))
@@ -142,51 +163,60 @@ struct UserAuthentication: View {
         
         func callCorrespondingApiCall(@ObservedObject viewModel:UserAuthentication.ViewModel)
         {
-            
-    //       if(viewModel.isUserLoginView)
-//       {
-//           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).verifyUserDetails(userName:viewModel.username, password: viewModel.password) { (isSuccess, result) in
-//
-//               let res=result as! UserAuthenticationResponse
-//               if(!res.success)
-//               {
-//                   viewModel.toastMessage=res.message!
-//                   viewModel.showToast=true
-//               }
-//               else
-//               {
-//                   viewModel.toastMessage="Login successfull"
-//                   viewModel.showToast=true
-//                   viewModel.navigationPath.removeAll()
-//                   viewModel.navigationPath.append("aaaa")
-//               }
-//
-//
-//           } completionHandler: { err in
-//               print("cccc")
-//           }
-//       }else
-//       {
-//           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).createNewUser(userName: viewModel.username, password: viewModel.password, email: viewModel.email, onResultObtained: {
-//               (isSuccess,result) in
-//
-//               let res=result as! NewUserRegistrationResponse
-//               if(!res.success)
-//               {
-//                   viewModel.toastMessage=res.message!
-//                   viewModel.showToast=true
-//               }
-//               else
-//               {
-//                   viewModel.toastMessage="Login successfull"
-//                   viewModel.showToast=true
-//                   viewModel.navigationPath.removeAll()
-//                   viewModel.navigationPath.append("aaaa")
-//               }
-//           }, completionHandler: {
-//               error in
-//           })
-//       }
+
+
+           if(viewModel.isUserLoginView)
+       {
+           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).verifyUserDetails(userName:viewModel.username, password: viewModel.password) { (isSuccess, result) in
+
+               let res=result as! UserAuthenticationResponse
+               if(!res.success)
+               {
+                   viewModel.toastMessage=res.message!
+                   viewModel.showToast=true
+               }
+               else
+               {
+                   viewModel.toastMessage="Login successfull"
+                   viewModel.showToast=true
+                 
+                   print("is Mainb :"+String(Thread.isMainThread))
+                   viewModel.cacheManger.saveStringDataToCache(key:viewModel.cacheManger.USER_NAME, value:viewModel.username) {
+                       _ in
+                       print("saving")
+                       sleep(3)
+                       isLoggedIn = true
+                       
+                   }
+           
+               }
+
+
+           } completionHandler: { err in
+             
+           }
+       }else
+       {
+           ApiHandler(apiCallManager: Greeting().getHttpClientForApi1()).createNewUser(userName: viewModel.username, password: viewModel.password, email: viewModel.email, onResultObtained: {
+               (isSuccess,result) in
+
+               let res=result as! NewUserRegistrationResponse
+               if(!res.success)
+               {
+                   viewModel.toastMessage=res.message!
+                   viewModel.showToast=true
+               }
+               else
+               {
+                   viewModel.toastMessage="Login successfull"
+                   viewModel.showToast=true
+                  
+                
+               }
+           }, completionHandler: {
+               error in
+           })
+       }
         }
     }
    
@@ -202,13 +232,13 @@ struct UserAuthentication: View {
 extension UserAuthentication {
     class ViewModel: ObservableObject {
         @Published var toastMessage = "Loading..."
-        @Published var username = ""
+        @Published var username = "bbb@bbb.com"
         @Published var email = ""
-        @Published var password = ""
+        @Published var password = "bbb"
         @Published var showToast=false
         @Published var isUserLoginView=true
         @Published var navigationPath = [String]()
-     
+        var cacheManger = CacheManager(dataStoreInstance: DataStoreInstance().getManger())
         @Published  var isSecured: Bool = true
         init() {
             

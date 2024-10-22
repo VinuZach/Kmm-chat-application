@@ -19,7 +19,7 @@ import com.example.chatapplication.android.chat.MainActivity
 import com.example.chatapplication.android.theme.ChatApplicationTheme
 import com.example.chatapplication.cacheConfig.CacheManager
 import com.example.chatapplication.cacheConfig.DataStoreInstance
-import com.example.chatapplication.cacheConfig.DataStoreKeys
+
 
 import kotlinx.coroutines.launch
 
@@ -41,12 +41,8 @@ class AuthenticationActivity : ComponentActivity() {
 
                     LaunchedEffect(key1 = true) {
                         coroutineScope.launch {
-
-//                            val cacheManager = CacheManager.getManger(context = context)
-//
-//                            val userNameFlow = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME)
-                            val cacheManager = CacheManager(DataStoreInstance.getManger(context))
-                           val userName=cacheManager.retrieveDataFromCache(DataStoreKeys.USER_NAME)
+                      val cacheManager = CacheManager(DataStoreInstance.getManger(context))
+                           val userName=cacheManager.retrieveDataFromCache(cacheManager.USER_NAME)
                             if (userName != null) {
                                 finish()
                                 startActivity(Intent(this@AuthenticationActivity, MainActivity::class.java))

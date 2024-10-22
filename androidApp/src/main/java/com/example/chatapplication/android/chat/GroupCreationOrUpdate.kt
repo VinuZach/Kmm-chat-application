@@ -43,7 +43,6 @@ import com.example.chatapplication.ApiConfig.model.ChatListResponse
 import com.example.chatapplication.ApiConfig.model.ChatListResponseData
 import com.example.chatapplication.cacheConfig.CacheManager
 import com.example.chatapplication.cacheConfig.DataStoreInstance
-import com.example.chatapplication.cacheConfig.DataStoreKeys
 import kotlinx.coroutines.launch
 
 @Composable
@@ -87,7 +86,7 @@ fun GroupCreationOrUpdate(
 //            val cacheManager = CacheManager.getManger(context = context)
 //            currentUserName.value = cacheManager.data.firstOrNull()?.toPreferences()?.get(USER_NAME).toString()
             val cacheManager=CacheManager(DataStoreInstance.getManger(context))
-            currentUserName.value=cacheManager.retrieveDataFromCache(DataStoreKeys.USER_NAME)!!
+            currentUserName.value=cacheManager.retrieveDataFromCache(cacheManager.USER_NAME)!!
         }.invokeOnCompletion {
             Log.d("bdfgert", "ContentView: $currentUserName")
             viewModel.retrieveChatList(currentUserName.value, true, onResultObtained = object : (Boolean, Any) -> Unit {

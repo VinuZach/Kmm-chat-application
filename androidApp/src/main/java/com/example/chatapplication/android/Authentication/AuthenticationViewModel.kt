@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.chatapplication.ApiHandler
 import com.example.chatapplication.ApiResponseObtained
 import com.example.chatapplication.cacheConfig.CacheManager
-import com.example.chatapplication.cacheConfig.DataStoreKeys
+
 import kotlinx.coroutines.launch
 
 
@@ -29,7 +29,7 @@ class AuthenticationViewModel() : ViewModel()
     fun saveUserNameToCache(cacheManager: CacheManager, userName: String)
     {
         viewModelScope.launch {
-            cacheManager.saveDataToCache(DataStoreKeys.USER_NAME,userName)
+            cacheManager.saveDataToCache(cacheManager.USER_NAME,userName)
 //            cacheManager.edit { preference ->
 //                preference[USER_NAME] = userName
 //            }
