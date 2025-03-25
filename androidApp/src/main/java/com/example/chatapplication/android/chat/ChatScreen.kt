@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -121,19 +120,51 @@ fun ChatScreen(userName: String, viewModel: ChatViewModel, roomId: Int, roomName
                             val color =
                                 if (!isOwnMessage) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
 
-
+                            val displayBlockedUser = remember {
+                                mutableStateOf(false)
+                            }
+                            val messageClickEvent: () -> Unit = {
+                                blockedUserList?.let {
+                                    if (it.isNotEmpty()) {
+                                        displayBlockedUser.value = !displayBlockedUser.value
+                                    }
+                                }
+                            }
                             Box(contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                                 modifier = Modifier.fillMaxWidth()) {
                                 Log.d("zxczxczx", "ChatScreen: ${blockedUserList?.isEmpty()}")
-//                                if (isOwnMessage)
                                 blockedUserList?.let {
                                     if (it.isNotEmpty()) {
                                         ChatMessageView(MaterialTheme.colorScheme.tertiary, sendUserMessage,
                                             message1,
-                                            true, isOwnMessage)
+                                            true, isOwnMessage, messageClickEvent)
                                     }
                                 }
-                                ChatMessageView(color, sendUserMessage, message1, false, isOwnMessage)
+                                ChatMessageView(color, sendUserMessage, message1, false, isOwnMessage,
+                                    messageClickEvent)
+
+
+                            }
+                            if (displayBlockedUser.value) {
+                                var unblockedUserList: MutableList<String> = mutableListOf()
+                                blockedUserList?.let {
+                                    viewModel.state.value.messages.last().chat_room_user_list?.let { fullUserList ->
+                                        unblockedUserList = fullUserList.toMutableList()
+                                        unblockedUserList.removeAll(it)
+                                    }
+                                    LazyRow(modifier = Modifier.fillMaxWidth(), reverseLayout = true) {
+
+                                        items(unblockedUserList) { userName ->
+                                            Text(text = userName,
+                                                modifier = Modifier
+                                                        .padding(horizontal = 5.dp)
+                                                        .fillMaxWidth()
+                                                        .align(Alignment.End),
+                                                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                                color=MaterialTheme.colorScheme.primary)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -277,17 +308,19 @@ fun TitleWithBackButton(title: String, onBackPressed: () -> Unit, paddingValues:
         Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = "back to chat listing",
             tint = Color.White)
         Text(text = title, fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-            fontSize = MaterialTheme.typography.titleLarge.fontSize, color = Color.White,
+            fontSize = MaterialTheme.typography.titleMedium.fontSize, color = Color.White,
             modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 18.dp, horizontal = 10.dp))
+                    .padding(vertical = 15.dp, horizontal = 10.dp))
 
     }
 }
 
 @Composable
-fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHighLightView: Boolean,
-    isOwnMessage: Boolean) {
+fun ChatMessageView(
+    color: Color, sendUserMessage: String, message: String, isHighLightView: Boolean,
+    isOwnMessage: Boolean, onClickAction: () -> Unit,
+) {
     val modifier = if (isHighLightView) {
         if (isOwnMessage)
             Modifier.padding(end = 18.dp, bottom = 15.dp)
@@ -295,6 +328,9 @@ fun ChatMessageView(color: Color, sendUserMessage: String, message: String, isHi
             Modifier.padding(start = 18.dp, bottom = 15.dp)
     } else Modifier.padding(10.dp)
     Column(modifier = modifier
+            .clickable {
+                onClickAction.invoke()
+            }
             .defaultMinSize(200.dp)
 
 //                                        .drawBehind {
