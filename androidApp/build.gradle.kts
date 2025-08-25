@@ -8,11 +8,11 @@ plugins {
 
 android {
     namespace = "com.example.chatapplication.android"
-    compileSdk = 34
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.example.chatapplication.android"
         minSdk = 23
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
         vectorDrawables {
@@ -65,7 +65,7 @@ dependencies {
     implementation (libs.androidx.constraintlayout.compose)
     implementation (libs.androidx.compose.icons)
     debugImplementation(libs.androidx.ui.test.manifest)
-
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.27.0")
     implementation(libs.androidx.datastore.preferences)
 
 }
