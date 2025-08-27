@@ -1,4 +1,4 @@
-package com.example.chatapplication.android.chat
+package com.example.chatapplication.android
 
 import android.content.Context
 import android.media.MediaPlayer
@@ -28,7 +28,7 @@ class AudioRecorderManager {
                 MediaRecorder(context)
             } else {
                 @Suppress("DEPRECATION")
-                MediaRecorder()
+                (MediaRecorder())
             }.apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
@@ -50,7 +50,7 @@ class AudioRecorderManager {
                 release()
             }catch (e: Exception)
             {
-
+                Log.e(TAG, "stopRecording: $e", )
             }
 
         }
@@ -59,16 +59,14 @@ class AudioRecorderManager {
 
     fun getRecordedFilePath(): File? = outputFile
 
-    fun playAudioFile(isAudioCompleted: () -> Unit): Unit {
+    fun playAudioFile(filename:String, filePath: String ,isAudioCompleted: () -> Unit): Unit {
         if (audioPlayer.value.currentAudioPosition.value==0f) {
-            getRecordedFilePath()?.let { file ->
-                audioPlayer.value.playAudioFromPath(
-                    fileName = file.name,
-                    filePath = file.absolutePath,
-                    isAudioCompleted = isAudioCompleted
-                )
+            audioPlayer.value.playAudioFromPath(
+                fileName = filename,
+                filePath = filePath,
+                isAudioCompleted = isAudioCompleted
+            )
 
-            }
         }
         else
             audioPlayer.value.startPlayback()
@@ -87,11 +85,14 @@ class AudioRecorderManager {
 
     fun getFormattedCurrentTime(): String = formatTime(audioPlayer.value.getCurrentPosition())
     fun getFormattedDuration(): String = formatTime(audioPlayer.value.getDuration())
+
     private fun formatTime(milliseconds: Int): String {
         val seconds = (milliseconds / 1000) % 60
         val minutes = (milliseconds / (1000 * 60)) % 60
         return String.format("%02d:%02d", minutes, seconds)
     }
+
+
     class AudioPlayer {
         private var mediaPlayer: MediaPlayer? = null
 
@@ -125,7 +126,11 @@ class AudioRecorderManager {
                     prepareAsync()
 
                     setOnPreparedListener { player ->
-                        audioDuration.value = player.duration
+
+                        if (player.duration!=0) {
+                            Log.d("uertuer", "playAudioFromPath: ${player.duration}")
+                            audioDuration.value = player.duration
+                        }
                         currentFileName.value = fileName.ifEmpty { File(filePath).name }
 
                         startPlayback()
@@ -149,7 +154,7 @@ class AudioRecorderManager {
 
 
             } catch (e: IOException) {
-
+                Log.e("uertuer", "playAudioFromPath: $e", )
             }
         }
 
@@ -160,8 +165,10 @@ class AudioRecorderManager {
             mediaPlayer?.let { player ->
 
                 positionUpdateJob = CoroutineScope(Dispatchers.Main).launch {
+
                     while (isAudioPlaying.value) {
                         currentAudioPosition.value = player.currentPosition.toFloat()
+
                         delay(100)
                     }
                 }

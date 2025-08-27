@@ -1,5 +1,7 @@
 package com.example.chatapplication.ApiConfig.model
 
+import com.example.chatapplication.ApiConfig.BASE_URL
+import com.example.chatapplication.ApiConfig.HOST_NAME
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -42,4 +44,8 @@ data class AttachmentUploadResponse(
     var uploaded_at: String? = null,
     var success: Boolean = false,
     var message: String? = null
-)
+) {
+    fun getUploadFile(): String? {
+        return uploadedFile?.let { "http://$HOST_NAME$uploadedFile" };
+    }
+}

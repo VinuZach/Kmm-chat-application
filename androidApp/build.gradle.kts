@@ -65,7 +65,8 @@ dependencies {
     implementation (libs.androidx.constraintlayout.compose)
     implementation (libs.androidx.compose.icons)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.27.0")
+    implementation(libs.accompanist.systemuicontroller)
+    implementation("com.google.accompanist:accompanist-permissions:0.29.0-alpha")
     implementation(libs.androidx.datastore.preferences)
 
 }

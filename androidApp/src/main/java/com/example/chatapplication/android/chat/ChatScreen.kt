@@ -9,7 +9,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,14 +26,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -63,21 +58,17 @@ import com.example.chatapplication.ApiConfig.model.AttachmentUploadResponse
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatAttachment
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatMessageRequest
 import com.example.chatapplication.ApiConfig.websocketConfig.model.VoiceAttachment
+import com.example.chatapplication.android.AudioRecorderManager
+import com.example.chatapplication.android.AudioRecordingPermissionRequester
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
 import java.io.File
 
 
 @Composable
-fun ChatScreen(
-    modifier: Modifier,
-    userName: String,
-    viewModel: ChatViewModel,
-    roomId: Int,
-    roomName: String,
-    onBackPressed: () -> Unit
+fun ChatScreen(modifier: Modifier, userName: String, viewModel: ChatViewModel, roomId: Int, roomName: String,
+               onBackPressed: () -> Unit
 ) {
-
     val blockedUsers = remember {
         mutableListOf<String>()
     }
@@ -122,13 +113,9 @@ fun ChatScreen(
     }
     val state = viewModel.state.value
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-
-            .background(MaterialTheme.colorScheme.primaryContainer)
-    )
-
+    Column(modifier = modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.primaryContainer))
     {
 
         TitleWithBackButton(title = roomName, onBackPressed = onBackPressed, PaddingValues(8.dp))
@@ -145,132 +132,7 @@ fun ChatScreen(
 
 
             items(items = state.messages) { message ->
-
-                val messageDisplay: @Composable (sendUserMessage: String, currentUser: String, message: String, blockedUser: List<String>?, chatAttachment: ChatAttachment?) -> Unit =
-                    { sendUserMessage, currentUser, message1, blockedUserList ,chatAttachment->
-
-
-                        Column {
-
-                            val isOwnMessage = sendUserMessage == currentUser
-
-                            val color =
-                                if (!isOwnMessage) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
-
-                            val displayBlockedUser = remember {
-                                mutableStateOf(false)
-                            }
-                            val messageClickEvent: () -> Unit = {
-                                blockedUserList?.let {
-                                    if (it.isNotEmpty()) {
-                                        displayBlockedUser.value = !displayBlockedUser.value
-                                    }
-                                }
-                            }
-                            Box(
-                                contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-
-                                blockedUserList?.let {
-                                    if (it.isNotEmpty()) {
-                                        ChatMessageView(
-                                            MaterialTheme.colorScheme.tertiary, sendUserMessage,
-                                            message1,
-                                            true, isOwnMessage, messageClickEvent
-                                        )
-                                    }
-                                }
-                                ChatMessageView(
-                                    color, sendUserMessage, message1, false, isOwnMessage,
-                                    messageClickEvent
-                                )
-
-
-                            }
-                            if (displayBlockedUser.value) {
-                                var unblockedUserList: MutableList<String> = mutableListOf()
-                                blockedUserList?.let {
-                                    viewModel.state.value.messages.last().chat_room_user_list?.let { fullUserList ->
-                                        unblockedUserList = fullUserList.toMutableList()
-                                        unblockedUserList.removeAll(it)
-                                    }
-                                    LazyRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        reverseLayout = true
-                                    ) {
-
-                                        items(unblockedUserList) { userName ->
-                                            Text(
-                                                text = userName,
-                                                modifier = Modifier
-                                                    .padding(horizontal = 5.dp)
-                                                    .fillMaxWidth()
-                                                    .align(Alignment.End),
-                                                fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-
-
-
-
-                message.prevMessages?.forEach { prevMessage ->
-
-                    if (prevMessage.message.isNotEmpty()) {
-
-
-                        messageDisplay(
-                            prevMessage.user,
-                            userName,
-                            prevMessage.message,
-                            prevMessage.blocked_user,
-                            prevMessage.chatAttachment
-                        )
-
-
-                    }
-                    else if (prevMessage.chatAttachment!=null)
-                    {
-                        messageDisplay(
-                            prevMessage.user,
-                            userName,
-                            prevMessage.message,
-                            prevMessage.blocked_user,
-                            prevMessage.chatAttachment
-                        )
-                    }
-                }
-
-
-                Log.d("asdweqw", "ChatScreen: $message")
-                if (message.message.isNotEmpty()) {
-                    messageDisplay(
-                        message.user,
-                        userName,
-                        message.message,
-                        message.blocked_user,
-                        message.chatAttachment
-                    )
-
-
-                }
-                else if (message.chatAttachment!=null)
-                {
-                    messageDisplay(
-                        message.user,
-                        userName,
-                        message.message,
-                        message.blocked_user,
-                        message.chatAttachment
-                    )
-                }
+                ChatItemView(message, viewModel, userName)
             }
 
         }
@@ -333,21 +195,25 @@ fun ChatScreen(
 
 @Preview
 @Composable
-fun InputElementSpace(
-    messageText: MutableState<TextFieldValue> = mutableStateOf(TextFieldValue()),
-    viewModel: ChatViewModel = ChatViewModel(),
-    blockedUsers: MutableList<String> = mutableListOf<String>(),
-    newMessageSend: MutableState<Boolean> = mutableStateOf(false),
-    userName: String = "",
-    context: Context = LocalContext.current
+fun InputElementSpace(messageText: MutableState<TextFieldValue> = mutableStateOf(TextFieldValue()),
+                      viewModel: ChatViewModel = ChatViewModel(),
+                      blockedUsers: MutableList<String> = mutableListOf<String>(),
+                      newMessageSend: MutableState<Boolean> = mutableStateOf(false),
+                      userName: String = "",
+                      context: Context = LocalContext.current
 ) {
-    val audioRecorderManager = remember { AudioRecorderManager() }
+
+
     var recordedFile by remember { mutableStateOf<File?>(null) }
 
+    val audioRecorderManager = remember { AudioRecorderManager() }
 
-    Column() {
-        recordedFile?.let {
-            AttachmentView(modifier = Modifier, it, audioRecorderManager)
+    Column {
+        recordedFile?.let { file ->
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface)) {
+                AttachmentView(filename = file.name, filePath = file.absolutePath)
+            }
         }
 
         Row(
@@ -403,10 +269,6 @@ fun InputElementSpace(
 
                                         viewModel.sendMessage(Gson().toJson(sendMessage))
                                         viewModel.onMessageChange("")
-
-
-
-
                                         blockedUsers.clear()
                                         newMessageSend.value = true
                                         messageText.value = TextFieldValue(text = "")
@@ -444,8 +306,7 @@ fun InputElementSpace(
                                                     viewModel.messageText.value,
                                                     VoiceAttachment(voiceNoteAttachment)
                                                 )
-                                                Toast.makeText(
-                                                    context,
+                                                Toast.makeText(context,
                                                     "$isSuccess",
                                                     Toast.LENGTH_SHORT
                                                 )
@@ -466,149 +327,54 @@ fun InputElementSpace(
                         })
 
             } else {
-                Icon(
-                    imageVector = Icons.Default.Mic,
-                    contentDescription = "Voice note",
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onPress = {
-                                    val audioFile = File(
-                                        context.cacheDir,
-                                        "audio_record_${System.currentTimeMillis()}.3gp"
-                                    )
-                                    recordedFile = null
-                                    audioRecorderManager.startRecording(
-                                        context,
-                                        audioFile.absolutePath
-                                    )
-                                    Toast.makeText(context, "aaa", Toast.LENGTH_SHORT).show()
-                                    tryAwaitRelease()
-                                    audioRecorderManager.stopRecording()
-                                    audioRecorderManager.getRecordedFilePath()?.let { resultFile ->
-                                        recordedFile = resultFile
-                                    }
-
-                                    Toast.makeText(context, "sss", Toast.LENGTH_SHORT).show()
-                                })
-                        },
-                )
-            }
-
-
-        }
-    }
-
-}
-
-
-@Composable
-fun AttachmentView(
-    modifier: Modifier = Modifier,
-    recordedFilePath: File? = null,
-    audioRecorderManager: AudioRecorderManager = AudioRecorderManager()
-) {
-    val isMediaPlaying = remember {
-        mutableStateOf(false)
-    }
-    recordedFilePath?.let { recordedFile ->
-        Card(
-            modifier = modifier
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface)
-        ) {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                val toggleMediaPlay: () -> Unit = {
-                    isMediaPlaying.value = !isMediaPlaying.value
-                    if (isMediaPlaying.value)
-                        audioRecorderManager.playAudioFile() {
-                            isMediaPlaying.value = false
-                        }
-                    else
-                        audioRecorderManager.pauseAudioFile()
-
-
-                }
-
-
-                Icon(
-                    imageVector = if (isMediaPlaying.value)
-                        Icons.Default.Pause
-                    else
-                        Icons.Default.PlayArrow,
-                    contentDescription = "Play media",
-                    modifier = Modifier.clickable {
-                        toggleMediaPlay.invoke()
-                    })
-                val isScrolling = remember {
+                val isAudioPermissionGranted = remember {
                     mutableStateOf(false)
                 }
-                Column(Modifier.fillMaxWidth(0.9f)) {
 
-                    Slider(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = audioRecorderManager.getCurrentAudioPosition().value,
-                        onValueChangeFinished = {
-                            isScrolling.value = false
-                        },
-                        onValueChange = { newValue ->
-                            isScrolling.value = true
-                            audioRecorderManager.audioScrollToPosition(
-                                newValue.toInt()
-                            )
-                        },
-                        colors = SliderColors(
-                            thumbColor = MaterialTheme.colorScheme.primary,
-                            activeTrackColor = MaterialTheme.colorScheme.secondary,
-                            activeTickColor = MaterialTheme.colorScheme.secondary,
-                            inactiveTrackColor = MaterialTheme.colorScheme.surface,
-                            inactiveTickColor = MaterialTheme.colorScheme.secondary,
-                            disabledThumbColor = MaterialTheme.colorScheme.secondary,
-                            disabledActiveTrackColor = MaterialTheme.colorScheme.secondary,
-                            disabledActiveTickColor = MaterialTheme.colorScheme.secondary,
-                            disabledInactiveTrackColor = MaterialTheme.colorScheme.secondary,
-                            disabledInactiveTickColor = MaterialTheme.colorScheme.secondary,
-                        ),
-                        valueRange = 0f..audioRecorderManager.getTotalAudioDuration().value.toFloat(),
+                AudioRecordingPermissionRequester { hasPermission, requestPermission ->
+                    isAudioPermissionGranted.value = hasPermission
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = "Voice note",
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onPress = {
+                                        if (isAudioPermissionGranted.value) {
 
+                                            val audioFile = File(
+                                                context.cacheDir,
+                                                "audio_record_${System.currentTimeMillis()}.3gp"
+                                            )
+                                            recordedFile = null
+                                            audioRecorderManager.startRecording(
+                                                context,
+                                                audioFile.absolutePath
+                                            )
+                                            Toast.makeText(context, "aaa", Toast.LENGTH_SHORT).show()
+                                            tryAwaitRelease()
+                                            audioRecorderManager.stopRecording()
+                                            audioRecorderManager.getRecordedFilePath()?.let { resultFile ->
+                                                recordedFile = resultFile
+                                            }
 
-                        )
-                    if (isScrolling.value)
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = audioRecorderManager.getFormattedCurrentTime(),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Text(
-                                text = audioRecorderManager.getFormattedDuration(),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
+                                            Toast.makeText(context, "sss", Toast.LENGTH_SHORT).show()
+                                        } else
+                                            requestPermission.invoke()
+
+                                    })
+                            },
+                    )
                 }
-
-
             }
+
 
         }
     }
 
-
 }
+
 
 @Preview
 @Composable
@@ -644,12 +410,9 @@ fun TitleWithBackButton(
 @Preview
 @Composable
 fun ChatMessageView(
-    color: Color = Color.Transparent,
-    sendUserMessage: String = "",
-    message: String = "",
-    isHighLightView: Boolean = false,
-    isOwnMessage: Boolean = true,
-    onClickAction: () -> Unit = {},
+    color: Color = Color.Transparent, sendUserMessage: String = "user name", message: String = "message",
+    isHighLightView: Boolean = false, isOwnMessage: Boolean = true, onClickAction: () -> Unit = {},
+    chatAttachment: ChatAttachment? = null
 ) {
     val modifier = if (isHighLightView) {
         if (isOwnMessage)
@@ -663,50 +426,32 @@ fun ChatMessageView(
                 onClickAction.invoke()
             }
             .defaultMinSize(200.dp)
-
-//                                        .drawBehind {
-//                                            val cornerRadius = 10.dp.toPx()
-//                                            val triangleHeight = 20.dp.toPx()
-//                                            val triangleWidth = 25.dp.toPx()
-//                                            val trianglePath = Path().apply {
-//                                                if (isOwnMessage) {
-//                                                    moveTo(size.width, size.height - cornerRadius)
-//                                                    lineTo(size.width, size.height + triangleHeight)
-//                                                    lineTo(size.width - triangleWidth, size.height - cornerRadius)
-//                                                    close()
-//                                                } else {
-//                                                    moveTo(0f, size.height - cornerRadius)
-//                                                    lineTo(0f, size.height + triangleHeight)
-//                                                    lineTo(triangleWidth, size.height - cornerRadius)
-//                                                    close()
-//                                                }
-//
-//                                            }
-//
-//
-//
-//
-//                                            drawPath(path = trianglePath, color = color)
-//
-//
-//                                        }
             .background(color = color, shape = RoundedCornerShape(10.dp))
             .padding(8.dp)) {
         val fontColor =
             if (isHighLightView) Color.Transparent else MaterialTheme.colorScheme.background
+//        chatAttachment?.let {
+//            when (it) {
+//                is VoiceAttachment -> {
+//                    val voiceAttachment = (chatAttachment as VoiceAttachment).voiceAttachment
+//                    val audioRecorderManager = remember { AudioRecorderManager() }
+//                    Card(shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)) {
+//
+//                        AttachmentView(Modifier.background(MaterialTheme.colorScheme.primaryContainer), audioRecorderManager, filename = voiceAttachment.fileName!!, filePath = voiceAttachment.getUploadFile()!!)
+//
+//                    }
+//                }
+//            }
+//
+//
+//        }
 
-        Text(
-            text = message,
-            color = fontColor,
-            fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-            modifier = Modifier.padding(bottom = 5.dp),
-            fontSize = 20.sp
+
+        Text(text = message, color = fontColor, fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+            modifier = Modifier.padding(bottom = 5.dp), fontSize = 20.sp
         )
-        Text(
-            text = sendUserMessage, fontWeight = FontWeight.Light, color = fontColor,
+        Text(text = sendUserMessage, fontWeight = FontWeight.Light, color = fontColor,
             modifier = Modifier.padding(vertical = 2.dp), fontSize = 12.sp
         )
-
-
     }
 }
