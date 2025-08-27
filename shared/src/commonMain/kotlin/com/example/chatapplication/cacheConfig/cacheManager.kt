@@ -32,6 +32,12 @@ class CacheManager(private val dataStoreInstance:DataStore<Preferences>)
        return dataStoreInstance.data.first().toPreferences()[key]
     }
 
+    suspend fun clearCacheData()
+    {
+        dataStoreInstance.edit {
+           it.clear()
+        }
+    }
     suspend fun saveStringDataToCache( key:Preferences.Key<String>,value :String)
     {
         dataStoreInstance.edit {

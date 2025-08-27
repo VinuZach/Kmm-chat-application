@@ -15,12 +15,14 @@ import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatRoomWithT
 import com.example.chatapplication.ApiConfig.websocketConfig.model.GroupListRequestData
 import com.example.chatapplication.ApiHandler
 import com.example.chatapplication.Greeting
+import com.example.chatapplication.cacheConfig.CacheManager
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.io.File
 
 class ChatViewModel : ViewModel() {
 
@@ -77,6 +79,8 @@ class ChatViewModel : ViewModel() {
                         chatSocketService.observeMessages().onEach { message ->
 
                             if (message.message.trim().isEmpty()) {
+                                if (message.chatAttachment!=null)
+                                    return@onEach
                                 if (state.value.messages.isNotEmpty()) {
                                     state.value.messages.first().prevMessages?.let { existingPrevMessage ->
                                         if (existingPrevMessage.isNotEmpty()) _state.value = ChatState()
@@ -90,11 +94,13 @@ class ChatViewModel : ViewModel() {
                                     }
                                 }
                             }
+
+
                             val newList = state.value.messages.toMutableList().apply {
 
                                 add(0, message)
                             }
-
+                            Log.i("casedwded", "initSession:${newList.size}")
                             _state.value = state.value.copy(messages = newList)
                         }.launchIn(viewModelScope)
                     } else {
@@ -132,6 +138,18 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             chatSocketService.sendMessage(message)
             _messageText.value = ""
+
+        }
+    }
+    fun uploadFile(uploadedFile: File,onResultObtained: (Boolean, Any)->Unit) {
+        Log.d("asdasdadweqwe", "uploadFile: ${uploadedFile.name}")
+        viewModelScope.launch {
+
+            apiHandler.uploadChatAttachment(uploadedFile.name,uploadedFile.readBytes(), onResultObtained = {
+                    isSuccess, result->
+
+                onResultObtained.invoke(isSuccess,result)
+            })
 
         }
     }
@@ -193,6 +211,18 @@ class ChatViewModel : ViewModel() {
         onResultObtained: (Boolean, Any) -> Unit) {
         viewModelScope.launch {
             apiHandler.createOrUpdateGroup(groupName, groupId, selectedChatList.map { it.id }, onResultObtained)
+        }
+
+    }
+
+    fun clearCacheData(cacheManager: CacheManager)
+    {
+        viewModelScope.launch {
+            cacheManager.clearCacheData()
+//            cacheManager.edit { preference ->
+//                preference[USER_NAME] = userName
+//            }
+
         }
 
     }

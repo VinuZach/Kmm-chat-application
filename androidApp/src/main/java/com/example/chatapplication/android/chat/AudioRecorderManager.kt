@@ -46,8 +46,14 @@ class AudioRecorderManager {
 
     fun stopRecording() {
         mediaRecorder?.apply {
-            stop()
-            release()
+            try {
+                stop()
+                release()
+            }catch (e: Exception)
+            {
+
+            }
+
         }
         mediaRecorder = null
     }
@@ -79,6 +85,14 @@ class AudioRecorderManager {
     fun getTotalAudioDuration() = audioPlayer.value.audioDuration
 
     fun audioScrollToPosition(position: Int) = audioPlayer.value.seekTo(position)
+
+    fun getFormattedCurrentTime(): String = formatTime(audioPlayer.value.getCurrentPosition())
+    fun getFormattedDuration(): String = formatTime(audioPlayer.value.getDuration())
+    private fun formatTime(milliseconds: Int): String {
+        val seconds = (milliseconds / 1000) % 60
+        val minutes = (milliseconds / (1000 * 60)) % 60
+        return String.format("%02d:%02d", minutes, seconds)
+    }
     class AudioPlayer {
         private var mediaPlayer: MediaPlayer? = null
 
@@ -208,14 +222,9 @@ class AudioRecorderManager {
             return mediaPlayer?.duration ?: 0
         }
 
-        private fun formatTime(milliseconds: Int): String {
-            val seconds = (milliseconds / 1000) % 60
-            val minutes = (milliseconds / (1000 * 60)) % 60
-            return String.format("%02d:%02d", minutes, seconds)
-        }
 
-        fun getFormattedCurrentTime(): String = formatTime(getCurrentPosition())
-        fun getFormattedDuration(): String = formatTime(getDuration())
+
+
 
     }
 

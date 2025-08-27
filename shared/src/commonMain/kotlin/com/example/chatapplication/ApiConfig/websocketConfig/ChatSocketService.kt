@@ -89,6 +89,7 @@ class ChatSocketService {
             }?.asCommonFlow() ?: flow<MessageDto> { }.asCommonFlow()
 
         } catch (e: Exception) {
+            print("observeMessages  : $e")
             e.printStackTrace()
             flow<MessageDto> { }.asCommonFlow()
         }

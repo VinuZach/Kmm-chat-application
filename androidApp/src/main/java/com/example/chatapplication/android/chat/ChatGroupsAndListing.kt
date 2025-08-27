@@ -63,11 +63,13 @@ fun ChatGroupAndListingMain(viewModel: ChatViewModel = ChatViewModel(),
     redirectToRoomById: (Int, String) -> Unit = { _, _ -> },
     redirectToRoomDetails: (Int?) -> Unit = { _ -> },
     createNewChat: (Int, String?) -> Unit = { _, _ -> },
-    createNewGroup:(Int,String?) ->Unit ={_,_ ->}) {
+    createNewGroup:(Int,String?) ->Unit ={_,_ ->},logoutUser:()-> Unit) {
 
     TitleWithCurvedEdgeBody(titleView = {
         Text(text = "side menu")
-        Text(text = "Icon")
+        Text(text = "Icon", modifier = Modifier.clickable(){
+            logoutUser.invoke()
+        })
 
     }, bodyView = {
         GroupListingAndChatView(viewModel, redirectToRoomById,createNewGroup)

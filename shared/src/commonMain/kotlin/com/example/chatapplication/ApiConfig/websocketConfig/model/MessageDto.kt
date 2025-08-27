@@ -6,13 +6,13 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class MessageDto(var message: String, var user: String, var new_page_number: Int, var blocked_user: List<String>?,
-    var prevMessages: List<PrevMessage>?, var chat_room_user_list: List<String>?) {
+    var prevMessages: List<PrevMessage>?, var chat_room_user_list: List<String>?,var chatAttachment: ChatAttachment?=null) {
     @Serializable
-    data class PrevMessage(var primaryId: Int, var message: String, var timestamp: String, var user: String, var blocked_user: List<String>?)
+    data class PrevMessage(var primaryId: Int, var message: String, var timestamp: String, var user: String, var blocked_user: List<String>?,var chatAttachment: ChatAttachment?=null)
 
 }
 @Serializable
-data class ChatMessageRequest(var command: String, var message: String, var user: String, var pageNumber: Int, var blocked_user: List<String>)
+data class ChatMessageRequest(var command: String, var message: String, var user: String, var pageNumber: Int, var blocked_user: List<String>,var chatAttachment: ChatAttachment?=null)
 
 @Suppress("unused")
 fun ChatMessageRequest.getStringData(): String {

@@ -1,7 +1,6 @@
 package com.example.chatapplication.android.chat
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -32,10 +31,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -60,7 +58,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.example.chatapplication.ApiConfig.model.AttachmentUploadResponse
+import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatAttachment
 import com.example.chatapplication.ApiConfig.websocketConfig.model.ChatMessageRequest
+import com.example.chatapplication.ApiConfig.websocketConfig.model.VoiceAttachment
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
 import java.io.File
@@ -96,7 +97,7 @@ fun ChatScreen(
     DisposableEffect(key1 = lifeCycleOwner) {
 
         val observer = LifecycleEventObserver() { _, event ->
-            Log.d("awhew", "cccc : $event")
+
             if (event == Lifecycle.Event.ON_START) viewModel.initSessionForChatRoom(
                 "/$roomId/",
                 onConnected = {
@@ -124,7 +125,7 @@ fun ChatScreen(
         modifier = modifier
             .fillMaxSize()
 
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.primaryContainer)
     )
 
     {
@@ -143,8 +144,10 @@ fun ChatScreen(
 
 
             items(items = state.messages) { message ->
-                val messageDisplay: @Composable (sendUserMessage: String, currentUser: String, message: String, blockedUser: List<String>?) -> Unit =
-                    { sendUserMessage, currentUser, message1, blockedUserList ->
+
+                val messageDisplay: @Composable (sendUserMessage: String, currentUser: String, message: String, blockedUser: List<String>?, chatAttachment: ChatAttachment?) -> Unit =
+                    { sendUserMessage, currentUser, message1, blockedUserList ,chatAttachment->
+
 
                         Column {
 
@@ -167,7 +170,7 @@ fun ChatScreen(
                                 contentAlignment = if (isOwnMessage) Alignment.CenterEnd else Alignment.CenterStart,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Log.d("zxczxczx", "ChatScreen: ${blockedUserList?.isEmpty()}")
+
                                 blockedUserList?.let {
                                     if (it.isNotEmpty()) {
                                         ChatMessageView(
@@ -218,6 +221,7 @@ fun ChatScreen(
 
 
                 message.prevMessages?.forEach { prevMessage ->
+
                     if (prevMessage.message.isNotEmpty()) {
 
 
@@ -225,29 +229,56 @@ fun ChatScreen(
                             prevMessage.user,
                             userName,
                             prevMessage.message,
-                            prevMessage.blocked_user
+                            prevMessage.blocked_user,
+                            prevMessage.chatAttachment
                         )
 
 
                     }
+                    else if (prevMessage.chatAttachment!=null)
+                    {
+                        messageDisplay(
+                            prevMessage.user,
+                            userName,
+                            prevMessage.message,
+                            prevMessage.blocked_user,
+                            prevMessage.chatAttachment
+                        )
+                    }
                 }
+
+
+
                 if (message.message.isNotEmpty()) {
+                    messageDisplay(
+                        message.user,
+                        userName,
+                        message.message,
+                        message.blocked_user,
+                        message.chatAttachment
+                    )
 
 
-                    messageDisplay(message.user, userName, message.message, message.blocked_user)
-                    Log.w("3456456", "Res   ")
-
-
+                }
+                else if (message.chatAttachment!=null)
+                {
+                    messageDisplay(
+                        message.user,
+                        userName,
+                        message.message,
+                        message.blocked_user,
+                        message.chatAttachment
+                    )
                 }
             }
 
         }
-        Log.e("asdsadsa", "ChatScreen: ${viewModel.showUsersInChat.value}")
+
         val messageText = remember {
             mutableStateOf(TextFieldValue())
         }
         if (viewModel.showUsersInChat.value) {
-            Log.e("asdsadsa", "ChatScreen: ${viewModel.state.value.messages}")
+
             if (viewModel.state.value.messages.isNotEmpty()) {
 
                 viewModel.state.value.messages.last().chat_room_user_list?.let { chatUserList ->
@@ -310,21 +341,21 @@ fun InputElementSpace(
     context: Context = LocalContext.current
 ) {
     val audioRecorderManager = remember { AudioRecorderManager() }
-    var recordedFilePath by remember { mutableStateOf<File?>(null) }
+    var recordedFile by remember { mutableStateOf<File?>(null) }
 
 
     Column() {
-        recordedFilePath?.let {
+        recordedFile?.let {
             AttachmentView(modifier = Modifier, it, audioRecorderManager)
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-
-                .background(color = MaterialTheme.colorScheme.primary),
+                .background(MaterialTheme.colorScheme.surface),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
+
         ) {
             TextField(
                 modifier = Modifier.weight(0.85f),
@@ -350,8 +381,90 @@ fun InputElementSpace(
                 )
             )
 
+            if (messageText.value.text.isNotEmpty() || recordedFile != null) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "send",
+                    modifier = Modifier
+                        .weight(0.15f)
 
-            if (messageText.value.text.isEmpty()) {
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                val sendMessageToServer: (String, ChatAttachment?) -> Unit =
+                                    { message, chatAttachment ->
+                                        val sendMessage = ChatMessageRequest(
+                                            command = "content",
+                                            user = userName,
+                                            message = message,
+                                            blocked_user = blockedUsers,
+                                            pageNumber = 1,
+                                            chatAttachment = chatAttachment
+                                        )
+
+                                        viewModel.sendMessage(Gson().toJson(sendMessage))
+                                        viewModel.onMessageChange("")
+
+
+
+
+                                        blockedUsers.clear()
+                                        newMessageSend.value = true
+                                        messageText.value = TextFieldValue(text = "")
+                                        viewModel.showUsersInChat(false)
+
+                                    }
+                                if (viewModel.messageText.value.isNotEmpty()) {
+                                    sendMessageToServer.invoke(viewModel.messageText.value, null)
+//                                    val sendMessage = ChatMessageRequest(
+//                                        command = "content",
+//                                        user = userName,
+//                                        message = viewModel.messageText.value,
+//                                        blocked_user = blockedUsers,
+//                                        pageNumber = 1
+//                                    )
+//
+//                                    viewModel.sendMessage(Gson().toJson(sendMessage))
+//                                    viewModel.onMessageChange("")
+//
+//
+//
+//
+//                                    blockedUsers.clear()
+//                                    newMessageSend.value = true
+//                                    messageText.value = TextFieldValue(text = "")
+//                                    viewModel.showUsersInChat(false)
+                                } else if (recordedFile != null) {
+                                    recordedFile?.let {
+                                        viewModel.uploadFile(
+                                            it,
+                                            onResultObtained = { isSuccess, result ->
+                                                val voiceNoteAttachment =
+                                                    result as AttachmentUploadResponse
+                                                sendMessageToServer.invoke(
+                                                    viewModel.messageText.value,
+                                                    VoiceAttachment(voiceNoteAttachment)
+                                                )
+                                                Toast.makeText(
+                                                    context,
+                                                    "$isSuccess",
+                                                    Toast.LENGTH_SHORT
+                                                )
+                                                    .show()
+
+                                            })
+                                    }
+
+
+                                } else Toast
+                                    .makeText(context, "enter text", Toast.LENGTH_SHORT)
+                                    .show()
+
+                            }, onLongPress = {
+
+                                viewModel.showUsersInChat(true)
+                            })
+                        })
+
+            } else {
                 Icon(
                     imageVector = Icons.Default.Mic,
                     contentDescription = "Voice note",
@@ -364,7 +477,7 @@ fun InputElementSpace(
                                         context.cacheDir,
                                         "audio_record_${System.currentTimeMillis()}.3gp"
                                     )
-                                    recordedFilePath = null
+                                    recordedFile = null
                                     audioRecorderManager.startRecording(
                                         context,
                                         audioFile.absolutePath
@@ -373,58 +486,22 @@ fun InputElementSpace(
                                     tryAwaitRelease()
                                     audioRecorderManager.stopRecording()
                                     audioRecorderManager.getRecordedFilePath()?.let { resultFile ->
-                                        recordedFilePath = resultFile
+                                        recordedFile = resultFile
                                     }
 
                                     Toast.makeText(context, "sss", Toast.LENGTH_SHORT).show()
                                 })
                         },
                 )
-            } else {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Default.Send, contentDescription = "send",
-                    modifier = Modifier
-                        .weight(0.15f)
-
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = {
-                                if (viewModel.messageText.value.isNotEmpty()) {
-
-                                    val sendMessage = ChatMessageRequest(
-                                        command = "content",
-                                        user = userName,
-                                        message = viewModel.messageText.value,
-                                        blocked_user = blockedUsers,
-                                        pageNumber = 1
-                                    )
-
-                                    viewModel.sendMessage(Gson().toJson(sendMessage))
-                                    viewModel.onMessageChange("")
-
-
-
-
-                                    blockedUsers.clear()
-                                    newMessageSend.value = true
-                                    messageText.value = TextFieldValue(text = "")
-                                    viewModel.showUsersInChat(false)
-                                } else Toast
-                                    .makeText(context, "enter text", Toast.LENGTH_SHORT)
-                                    .show()
-
-                            }, onLongPress = {
-
-                                viewModel.showUsersInChat(true)
-                            })
-                        })
             }
+
 
         }
     }
 
 }
 
-@Preview
+
 @Composable
 fun AttachmentView(
     modifier: Modifier = Modifier,
@@ -439,7 +516,7 @@ fun AttachmentView(
             modifier = modifier
                 .fillMaxWidth(),
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface)
         ) {
 
             Row(
@@ -450,20 +527,11 @@ fun AttachmentView(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                Slider(modifier = Modifier.fillMaxWidth(0.6f),
-                    value = audioRecorderManager.getCurrentAudioPosition().value,
-                    onValueChange = { newValue ->
-                        audioRecorderManager.audioScrollToPosition(
-                            newValue.toInt()
-                        )
-                    },
-                    valueRange = 0f..audioRecorderManager.getTotalAudioDuration().value.toFloat()
-                )
                 val toggleMediaPlay: () -> Unit = {
                     isMediaPlaying.value = !isMediaPlaying.value
                     if (isMediaPlaying.value)
-                        audioRecorderManager.playAudioFile(){
-                            isMediaPlaying.value=false
+                        audioRecorderManager.playAudioFile() {
+                            isMediaPlaying.value = false
                         }
                     else
                         audioRecorderManager.pauseAudioFile()
@@ -481,6 +549,58 @@ fun AttachmentView(
                     modifier = Modifier.clickable {
                         toggleMediaPlay.invoke()
                     })
+                val isScrolling = remember {
+                    mutableStateOf(false)
+                }
+                Column(Modifier.fillMaxWidth(0.9f)) {
+
+                    Slider(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = audioRecorderManager.getCurrentAudioPosition().value,
+                        onValueChangeFinished = {
+                            isScrolling.value = false
+                        },
+                        onValueChange = { newValue ->
+                            isScrolling.value = true
+                            audioRecorderManager.audioScrollToPosition(
+                                newValue.toInt()
+                            )
+                        },
+                        colors = SliderColors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.secondary,
+                            activeTickColor = MaterialTheme.colorScheme.secondary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surface,
+                            inactiveTickColor = MaterialTheme.colorScheme.secondary,
+                            disabledThumbColor = MaterialTheme.colorScheme.secondary,
+                            disabledActiveTrackColor = MaterialTheme.colorScheme.secondary,
+                            disabledActiveTickColor = MaterialTheme.colorScheme.secondary,
+                            disabledInactiveTrackColor = MaterialTheme.colorScheme.secondary,
+                            disabledInactiveTickColor = MaterialTheme.colorScheme.secondary,
+                        ),
+                        valueRange = 0f..audioRecorderManager.getTotalAudioDuration().value.toFloat(),
+
+
+                        )
+                    if (isScrolling.value)
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = audioRecorderManager.getFormattedCurrentTime(),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = audioRecorderManager.getFormattedDuration(),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                }
+
+
             }
 
         }

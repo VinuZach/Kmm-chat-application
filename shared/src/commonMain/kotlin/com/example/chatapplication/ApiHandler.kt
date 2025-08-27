@@ -2,6 +2,7 @@ package com.example.chatapplication
 
 import com.example.chatapplication.ApiConfig.model.BaseResponse
 import com.example.chatapplication.ApiConfig.HttpEndPoints
+import com.example.chatapplication.ApiConfig.model.AttachmentUploadResponse
 import com.example.chatapplication.ApiConfig.model.ChatCreationOrUpdate
 import com.example.chatapplication.ApiConfig.model.ChatListRequest
 import com.example.chatapplication.ApiConfig.model.ChatListResponse
@@ -11,15 +12,20 @@ import com.example.chatapplication.ApiConfig.model.NewUserRegistrationResponse
 import com.example.chatapplication.ApiConfig.model.UserAuthenticationResponse
 import com.example.chatapplication.ApiConfig.model.UserDetails
 import com.example.chatapplication.ApiConfig.model.UsersEmailsResponse
-import com.example.chatapplication.ApiConfig.websocketConfig.AssignRoomToGroupRequest
+import com.example.chatapplication.ApiConfig.websocketConfig.model.AssignRoomToGroupRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.basicAuth
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -30,8 +36,10 @@ import kotlinx.coroutines.launch
 class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
 
 
-    suspend fun assignRoomToSelectedGroup(roomId: Int, groupId: Int, userOverride: Boolean,
-        onResultObtained: (Boolean, Any) -> Unit) {
+    suspend fun assignRoomToSelectedGroup(
+        roomId: Int, groupId: Int, userOverride: Boolean,
+        onResultObtained: (Boolean, Any) -> Unit
+    ) {
         var result = BaseResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
 
@@ -53,8 +61,14 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
         }
     }
 
-    suspend fun verifyUserDetails(userName: String, password: String, onResultObtained: (Boolean, Any) -> Unit) {
-        var result = UserAuthenticationResponse(success = false, message = "Server response not obtained")
+
+    suspend fun verifyUserDetails(
+        userName: String,
+        password: String,
+        onResultObtained: (Boolean, Any) -> Unit
+    ) {
+        var result =
+            UserAuthenticationResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
             apiCallManager.request {
 
@@ -76,7 +90,10 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
 
     }
 
-    suspend fun retrieveAllUserEmails(currentUserName: String, onResultObtained: (Boolean, Any) -> Unit) {
+    suspend fun retrieveAllUserEmails(
+        currentUserName: String,
+        onResultObtained: (Boolean, Any) -> Unit
+    ) {
         var result = UsersEmailsResponse(false)
 
         val httpResponse: HttpResponse? = try {
@@ -100,13 +117,17 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
         }
     }
 
-    suspend fun retrieveChatList(currentUserName:String,blockAssignedChats: Boolean, onResultObtained: (Boolean, Any) -> Unit) {
+    suspend fun retrieveChatList(
+        currentUserName: String,
+        blockAssignedChats: Boolean,
+        onResultObtained: (Boolean, Any) -> Unit
+    ) {
         var result = ChatListResponse(false)
 
         val httpResponse: HttpResponse? = try {
             apiCallManager.request {
                 contentType(ContentType.Application.Json)
-                setBody(ChatListRequest(currentUserName,blockAssignedChats))
+                setBody(ChatListRequest(currentUserName, blockAssignedChats))
                 url(HttpEndPoints.RetrieveAllChats.url)
                 method = HttpMethod.Post
 
@@ -126,9 +147,12 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
     }
 
 
-    suspend fun createNewUser(userName: String, password: String, email: String,
-        onResultObtained: (Boolean, Any) -> Unit) {
-        var result = NewUserRegistrationResponse(success = false, message = "Server response not obtained")
+    suspend fun createNewUser(
+        userName: String, password: String, email: String,
+        onResultObtained: (Boolean, Any) -> Unit
+    ) {
+        var result =
+            NewUserRegistrationResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
             apiCallManager.request {
                 contentType(ContentType.Application.Json)
@@ -150,8 +174,10 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
     }
 
 
-    suspend fun createOrUpdateChat(roomName: String, roomId: Int?, selectedUserForChat: List<String>,
-        onResultObtained: (Boolean, Any) -> Unit) {
+    suspend fun createOrUpdateChat(
+        roomName: String, roomId: Int?, selectedUserForChat: List<String>,
+        onResultObtained: (Boolean, Any) -> Unit
+    ) {
         var result = BaseResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
 
@@ -174,8 +200,46 @@ class ApiHandler(val apiCallManager: HttpClient = getHttpClientForApi()) {
 
     }
 
+    suspend fun uploadChatAttachment(
+        fileName:String,fileBytes: ByteArray, onResultObtained: (Boolean, Any) -> Unit
+    ) {
 
-    suspend fun createOrUpdateGroup(groupName: String,groupId:Int?, roomIds: List<Int>, onResultObtained: (Boolean, Any) -> Unit) {
+        var result =
+            AttachmentUploadResponse(success = false, message = "Server response not obtained")
+        val httpResponse: HttpResponse? = try {
+            apiCallManager.submitFormWithBinaryData(
+                url = HttpEndPoints.UploadAttachment.url,
+                formData = formData {
+                    append(
+                        key = "uploadedFile", // 🔁 Must match the name used in Postman
+                        value = fileBytes,
+                        headers = Headers.build {
+                            append(HttpHeaders.ContentDisposition, "form-data; name=\"uploadedFile\"; filename=\"${fileName}\"")
+//                            append(HttpHeaders.ContentType, contentTypeFromFileName(fileName)) // Optional: use correct MIME type
+                        }
+                    )
+                }
+            )
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+        if (httpResponse?.status == HttpStatusCode.Created) {
+            result = httpResponse.body<AttachmentUploadResponse>()
+            result.success=true
+        }
+        CoroutineScope(Dispatchers.Main).launch {
+            onResultObtained.invoke(result.success, result)
+        }
+    }
+
+    suspend fun createOrUpdateGroup(
+        groupName: String,
+        groupId: Int?,
+        roomIds: List<Int>,
+        onResultObtained: (Boolean, Any) -> Unit
+    ) {
         var result = BaseResponse(success = false, message = "Server response not obtained")
         val httpResponse: HttpResponse? = try {
 

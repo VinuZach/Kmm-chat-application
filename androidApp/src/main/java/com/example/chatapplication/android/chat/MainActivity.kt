@@ -1,5 +1,7 @@
 package com.example.chatapplication.android.chat
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -21,7 +23,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.chatapplication.android.Authentication.AuthenticationActivity
 import com.example.chatapplication.android.theme.ChatApplicationTheme
+import com.example.chatapplication.cacheConfig.CacheManager
+import com.example.chatapplication.cacheConfig.DataStoreInstance
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.serialization.Serializable
 
@@ -83,17 +88,25 @@ class MainActivity : ComponentActivity() {
                     createNewGroup =
                         { groupId, groupName ->
                             navController.navigate(GroupCreationUpdate(groupId, groupName))
-                        }
+                        }, logoutUser = {
+                        chatViewModel.clearCacheData(CacheManager(DataStoreInstance.getManger(this@MainActivity)))
+                        startActivity(Intent(this@MainActivity, AuthenticationActivity::class.java))
+                        finish()
+                    }
                 )
 
             }
             composable<NavigationChatRoomId> {
                 val chatRoomId = it.toRoute<NavigationChatRoomId>()
                 Log.d("asasdsadsad", "directChat: ")
-                Scaffold(content = {paddingValues ->
-                    ChatScreen(modifier = Modifier.padding(paddingValues),
-                        userName = chatViewModel.userName.value, viewModel = chatViewModel,
-                        roomId = chatRoomId.roomId, roomName = chatRoomId.roomName, onBackPressed = {
+                Scaffold(content = { paddingValues ->
+                    ChatScreen(
+                        modifier = Modifier.padding(paddingValues),
+                        userName = chatViewModel.userName.value,
+                        viewModel = chatViewModel,
+                        roomId = chatRoomId.roomId,
+                        roomName = chatRoomId.roomName,
+                        onBackPressed = {
                             navController.popBackStack()
                         })
 
@@ -121,12 +134,14 @@ class MainActivity : ComponentActivity() {
 
 }
 
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class NavigationChatRoomId(val roomId: Int, val roomName: String)
 
-
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class ChatCreationUpdate(val roomId: Int = -1, val roomName: String?)
 
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class GroupCreationUpdate(val groupId: Int = -1, val groupName: String?)
