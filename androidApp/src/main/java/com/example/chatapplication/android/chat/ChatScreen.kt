@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -212,7 +213,13 @@ fun InputElementSpace(messageText: MutableState<TextFieldValue> = mutableStateOf
         recordedFile?.let { file ->
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface)) {
-                AttachmentView(filename = file.name, filePath = file.absolutePath)
+
+
+                AttachmentView(filename = file.name, filePath = file.absolutePath, audioRecorderManager = audioRecorderManager, onCancel = {
+                    recordedFile=null
+                })
+
+
             }
         }
 
@@ -430,21 +437,21 @@ fun ChatMessageView(
             .padding(8.dp)) {
         val fontColor =
             if (isHighLightView) Color.Transparent else MaterialTheme.colorScheme.background
-//        chatAttachment?.let {
-//            when (it) {
-//                is VoiceAttachment -> {
-//                    val voiceAttachment = (chatAttachment as VoiceAttachment).voiceAttachment
-//                    val audioRecorderManager = remember { AudioRecorderManager() }
-//                    Card(shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)) {
-//
-//                        AttachmentView(Modifier.background(MaterialTheme.colorScheme.primaryContainer), audioRecorderManager, filename = voiceAttachment.fileName!!, filePath = voiceAttachment.getUploadFile()!!)
-//
-//                    }
-//                }
-//            }
-//
-//
-//        }
+        chatAttachment?.let {
+            when (it) {
+                is VoiceAttachment -> {
+                    val voiceAttachment = (chatAttachment as VoiceAttachment).voiceAttachment
+                    val audioRecorderManager = remember { AudioRecorderManager() }
+                    Card(shape = RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)) {
+
+                        AttachmentView(Modifier.background(MaterialTheme.colorScheme.primaryContainer), audioRecorderManager, filename = voiceAttachment.fileName!!, filePath = voiceAttachment.getUploadFile()!!)
+
+                    }
+                }
+            }
+
+
+        }
 
 
         Text(text = message, color = fontColor, fontFamily = MaterialTheme.typography.titleLarge.fontFamily,

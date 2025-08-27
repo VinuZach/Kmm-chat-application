@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -19,7 +20,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -135,101 +135,111 @@ fun ChatItemView(message: MessageDto, viewModel: ChatViewModel, userName: String
 
 @Preview
 @Composable
-fun AttachmentView(modifier: Modifier = Modifier, audioRecorderManager: AudioRecorderManager = AudioRecorderManager(),
-                   filename: String = "", filePath: String = "") {
+fun AttachmentView(
+    modifier: Modifier = Modifier, audioRecorderManager: AudioRecorderManager = AudioRecorderManager(),
+    filename: String = "", filePath: String = "", onCancel: (() -> Unit)? = null
+) {
     val isMediaPlaying = remember {
         mutableStateOf(false)
     }
-
-    Row(modifier = modifier
-        .fillMaxWidth()
-        .padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        val toggleMediaPlay: () -> Unit = {
-            isMediaPlaying.value = !isMediaPlaying.value
-            if (isMediaPlaying.value)
-                audioRecorderManager.playAudioFile(filename, filePath) {
-                    Log.d("uertuer", "------------: ")
-                    isMediaPlaying.value = false
-                }
-            else
-
-                audioRecorderManager.pauseAudioFile()
-
-
+    Column {
+        onCancel?.let {
+            Icon(
+                modifier = Modifier
+                    .padding(vertical = 10.dp, horizontal = 20.dp)
+                    .align(Alignment.End)
+                    .clickable {
+                        it.invoke()
+                    },
+                imageVector = Icons.Default.Close, contentDescription = "close",
+            )
         }
 
+        Row(modifier = modifier
+            .fillMaxWidth()
+            .padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-        Icon(
-            imageVector = if (isMediaPlaying.value)
-                Icons.Default.Pause
-            else
-                Icons.Default.PlayArrow,
-            contentDescription = "Play media",
-            modifier = Modifier.clickable {
-                toggleMediaPlay.invoke()
-            })
-        val isScrolling = remember {
-            mutableStateOf(false)
-        }
+            val toggleMediaPlay: () -> Unit = {
+                isMediaPlaying.value = !isMediaPlaying.value
+                if (isMediaPlaying.value)
+                    audioRecorderManager.playAudioFile(filename, filePath) {
+                        Log.d("uertuer", "------------: ")
+                        isMediaPlaying.value = false
+                    }
+                else
 
-        val totalDuration = remember { mutableFloatStateOf(0f) }
-        if (audioRecorderManager.getTotalAudioDuration().value.toFloat()>0f)
-        {
-            totalDuration.value=audioRecorderManager.getTotalAudioDuration().value.toFloat()
-        }
-        Log.d("uertuer", "AttachmentView: ${totalDuration}")
-        Column(Modifier.fillMaxWidth(0.9f)) {
-
-            Slider(
-                modifier = Modifier.fillMaxWidth(),
-                value = audioRecorderManager.getCurrentAudioPosition().value,
-                onValueChangeFinished = {
-                    isScrolling.value = false
-                },
-                onValueChange = { newValue ->
-                    isScrolling.value = true
-                    audioRecorderManager.audioScrollToPosition(
-                        newValue.toInt()
-                    )
-                },
-                colors = SliderColors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    activeTrackColor = MaterialTheme.colorScheme.secondary,
-                    activeTickColor = MaterialTheme.colorScheme.secondary,
-                    inactiveTrackColor = MaterialTheme.colorScheme.surface,
-                    inactiveTickColor = MaterialTheme.colorScheme.secondary,
-                    disabledThumbColor = MaterialTheme.colorScheme.secondary,
-                    disabledActiveTrackColor = MaterialTheme.colorScheme.secondary,
-                    disabledActiveTickColor = MaterialTheme.colorScheme.secondary,
-                    disabledInactiveTrackColor = MaterialTheme.colorScheme.secondary,
-                    disabledInactiveTickColor = MaterialTheme.colorScheme.secondary,
-                ),
-                valueRange = 0f..totalDuration.value,
+                    audioRecorderManager.pauseAudioFile()
 
 
-                )
-            // if (isScrolling.value)
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = audioRecorderManager.getFormattedCurrentTime(),
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = audioRecorderManager.getFormattedDuration(),
-                    style = MaterialTheme.typography.bodySmall
-                )
             }
+
+
+            Icon(
+                imageVector = if (isMediaPlaying.value)
+                    Icons.Default.Pause
+                else
+                    Icons.Default.PlayArrow,
+                contentDescription = "Play media",
+                modifier = Modifier.clickable {
+                    toggleMediaPlay.invoke()
+                })
+            val isScrolling = remember {
+                mutableStateOf(false)
+            }
+
+            Log.d("uertuer", "AttachmentView: ${audioRecorderManager.getTotalAudioDuration().value.toFloat()}")
+            Column(Modifier.fillMaxWidth(0.9f)) {
+
+                Slider(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = audioRecorderManager.getCurrentAudioPosition().value,
+                    onValueChangeFinished = {
+                        isScrolling.value = false
+                    },
+                    onValueChange = { newValue ->
+                        isScrolling.value = true
+                        audioRecorderManager.audioScrollToPosition(
+                            newValue.toInt()
+                        )
+                    },
+                    colors = SliderColors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.secondary,
+                        activeTickColor = MaterialTheme.colorScheme.secondary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surface,
+                        inactiveTickColor = MaterialTheme.colorScheme.secondary,
+                        disabledThumbColor = MaterialTheme.colorScheme.secondary,
+                        disabledActiveTrackColor = MaterialTheme.colorScheme.secondary,
+                        disabledActiveTickColor = MaterialTheme.colorScheme.secondary,
+                        disabledInactiveTrackColor = MaterialTheme.colorScheme.secondary,
+                        disabledInactiveTickColor = MaterialTheme.colorScheme.secondary,
+                    ),
+                    valueRange = 0f..audioRecorderManager.getTotalAudioDuration().value.toFloat(),
+
+
+                    )
+                // if (isScrolling.value)
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = audioRecorderManager.getFormattedCurrentTime(),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = audioRecorderManager.getFormattedDuration(),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+
         }
-
-
     }
 
 
