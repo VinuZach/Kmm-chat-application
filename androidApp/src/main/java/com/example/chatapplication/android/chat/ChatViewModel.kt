@@ -77,20 +77,23 @@ class ChatViewModel : ViewModel() {
                     onConnected?.invoke()
                     if (isForChat) {
                         chatSocketService.observeMessages().onEach { message ->
-
+                            Log.d("asdweqw", "initSession:-------------- ")
+                            Log.d("asdweqw", "$message")
                             if (message.message.trim().isEmpty()) {
-                                if (message.chatAttachment!=null)
-                                    return@onEach
-                                if (state.value.messages.isNotEmpty()) {
-                                    state.value.messages.first().prevMessages?.let { existingPrevMessage ->
-                                        if (existingPrevMessage.isNotEmpty()) _state.value = ChatState()
-                                    }
-                                    try {
-                                        state.value.messages.last().prevMessages?.let { existingPrevMessage ->
-                                            if (existingPrevMessage.isNotEmpty()) _state.value = ChatState()
+                                if (message.chatAttachment == null) {
+                                    if (state.value.messages.isNotEmpty()) {
+                                        state.value.messages.first().prevMessages?.let { existingPrevMessage ->
+                                            if (existingPrevMessage.isNotEmpty()) _state.value =
+                                                ChatState()
                                         }
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
+                                        try {
+                                            state.value.messages.last().prevMessages?.let { existingPrevMessage ->
+                                                if (existingPrevMessage.isNotEmpty()) _state.value =
+                                                    ChatState()
+                                            }
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                        }
                                     }
                                 }
                             }
@@ -100,7 +103,7 @@ class ChatViewModel : ViewModel() {
 
                                 add(0, message)
                             }
-                            Log.i("casedwded", "initSession:${newList.size}")
+                            Log.i("asdweqw", "initSession: $newList")
                             _state.value = state.value.copy(messages = newList)
                         }.launchIn(viewModelScope)
                     } else {

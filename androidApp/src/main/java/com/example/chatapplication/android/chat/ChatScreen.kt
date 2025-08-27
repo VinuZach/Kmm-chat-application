@@ -1,6 +1,7 @@
 package com.example.chatapplication.android.chat
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -248,7 +249,7 @@ fun ChatScreen(
                 }
 
 
-
+                Log.d("asdweqw", "ChatScreen: $message")
                 if (message.message.isNotEmpty()) {
                     messageDisplay(
                         message.user,
