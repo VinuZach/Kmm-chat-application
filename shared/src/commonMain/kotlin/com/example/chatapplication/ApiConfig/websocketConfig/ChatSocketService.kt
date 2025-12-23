@@ -14,6 +14,7 @@ import io.ktor.websocket.readText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
@@ -33,7 +34,7 @@ class ChatSocketService {
 
         this.currentUserName = currentUserName
         return try {
-
+            socket?.close()
             socket = client.webSocketSession {
                 url(url = Url(WebSocketEndpoint.ChatSocket.url + roomId))
             }
@@ -81,8 +82,8 @@ class ChatSocketService {
                 it is Frame.Text
             }?.map {
                 val json = (it as Frame.Text).readText()
-
-                val messageDto = Json.decodeFromString<MessageDto>(json)
+                val JsonDecorder = Json { ignoreUnknownKeys = true }
+                val messageDto = JsonDecorder.decodeFromString<MessageDto>(json)
 
                 messageDto
 
@@ -121,5 +122,6 @@ class ChatSocketService {
 
     suspend fun closeSession() {
         socket?.close()
+
     }
 }

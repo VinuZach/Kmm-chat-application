@@ -64,6 +64,7 @@ import com.example.chatapplication.android.AudioRecordingPermissionRequester
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.collectLatest
 import java.io.File
+import kotlin.math.sin
 
 
 @Composable
@@ -216,7 +217,7 @@ fun InputElementSpace(messageText: MutableState<TextFieldValue> = mutableStateOf
 
 
                 AttachmentView(filename = file.name, filePath = file.absolutePath, audioRecorderManager = audioRecorderManager, onCancel = {
-                    recordedFile=null
+                    recordedFile = null
                 })
 
 
@@ -236,10 +237,17 @@ fun InputElementSpace(messageText: MutableState<TextFieldValue> = mutableStateOf
                 value = messageText.value,
                 onValueChange = {
                     messageText.value = it
-                    if (it.text.isEmpty()) blockedUsers.clear()
+                    if (it.text.isEmpty()) {
+                        blockedUsers.clear()
+                        viewModel.showUsersInChat(false)
+                    }
+                    if (it.text.startsWith("@", true))
+                        viewModel.showUsersInChat(true)
+
                     viewModel.onMessageChange(it.text)
 
                 },
+                singleLine = true,
                 placeholder = {
                     Text(text = "Enter Message", modifier = Modifier.weight(1f))
                 },
@@ -282,27 +290,12 @@ fun InputElementSpace(messageText: MutableState<TextFieldValue> = mutableStateOf
                                         viewModel.showUsersInChat(false)
 
                                     }
-                                if (viewModel.messageText.value.isNotEmpty()) {
-                                    sendMessageToServer.invoke(viewModel.messageText.value, null)
-//                                    val sendMessage = ChatMessageRequest(
-//                                        command = "content",
-//                                        user = userName,
-//                                        message = viewModel.messageText.value,
-//                                        blocked_user = blockedUsers,
-//                                        pageNumber = 1
-//                                    )
-//
-//                                    viewModel.sendMessage(Gson().toJson(sendMessage))
-//                                    viewModel.onMessageChange("")
-//
-//
-//
-//
-//                                    blockedUsers.clear()
-//                                    newMessageSend.value = true
-//                                    messageText.value = TextFieldValue(text = "")
-//                                    viewModel.showUsersInChat(false)
-                                } else if (recordedFile != null) {
+                                if (viewModel.messageText.value.startsWith("@")) {
+
+                                    viewModel.onMessageChange( viewModel.messageText.value.removePrefix("@"))
+                                }
+
+                                if (recordedFile != null) {
                                     recordedFile?.let {
                                         viewModel.uploadFile(
                                             it,
@@ -313,6 +306,13 @@ fun InputElementSpace(messageText: MutableState<TextFieldValue> = mutableStateOf
                                                     viewModel.messageText.value,
                                                     VoiceAttachment(voiceNoteAttachment)
                                                 )
+                                                recordedFile = null
+                                                viewModel.onMessageChange("")
+                                                blockedUsers.clear()
+                                                newMessageSend.value = true
+                                                messageText.value = TextFieldValue(text = "")
+                                                viewModel.showUsersInChat(false)
+
                                                 Toast.makeText(context,
                                                     "$isSuccess",
                                                     Toast.LENGTH_SHORT
@@ -322,6 +322,9 @@ fun InputElementSpace(messageText: MutableState<TextFieldValue> = mutableStateOf
                                             })
                                     }
 
+
+                                } else if (viewModel.messageText.value.isNotEmpty()) {
+                                    sendMessageToServer.invoke(viewModel.messageText.value, null)
 
                                 } else Toast
                                     .makeText(context, "enter text", Toast.LENGTH_SHORT)
@@ -352,21 +355,21 @@ fun InputElementSpace(messageText: MutableState<TextFieldValue> = mutableStateOf
 
                                             val audioFile = File(
                                                 context.cacheDir,
-                                                "audio_record_${System.currentTimeMillis()}.3gp"
+                                                "audio_record_${System.currentTimeMillis()}.mp4"
                                             )
                                             recordedFile = null
                                             audioRecorderManager.startRecording(
                                                 context,
                                                 audioFile.absolutePath
                                             )
-                                            Toast.makeText(context, "aaa", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "recording started", Toast.LENGTH_SHORT).show()
                                             tryAwaitRelease()
                                             audioRecorderManager.stopRecording()
                                             audioRecorderManager.getRecordedFilePath()?.let { resultFile ->
                                                 recordedFile = resultFile
                                             }
 
-                                            Toast.makeText(context, "sss", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "recording ended", Toast.LENGTH_SHORT).show()
                                         } else
                                             requestPermission.invoke()
 
